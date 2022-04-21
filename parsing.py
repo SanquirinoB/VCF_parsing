@@ -1,4 +1,7 @@
+import re
+
 vcf_path = ''
+p_nucleotid_only = re.compile(r"[ACTGN]+")
 
 with open(vcf_path, 'r') as VCF:
     meta = VCF.readline()
@@ -36,10 +39,41 @@ with open(vcf_path, 'r') as VCF:
             # Set id of sample
             phrase_aux[0] = i
             id_haplo_aux = id_haplo[i].replace('/', '|')
-            aleles = id_haplo_aux.split('|')
+            aleles = [int(x) for x in id_haplo_aux.split('|')]
+
             # Over aleles
-            for alele in aleles:
-                
-            
+            for alele_i in range(len(aleles)):
+                alele_alt = aleles[alele_i]
+                # If the alele uses the reference
+                if alele_alt == 0:
+                    continue
+
+                # Save the alele edit applied
+                phrase_aux[2] = alele_i
+
+                # If the alele uses a variant
+                    # Fix value to a valid array index
+                alele_alt -=1
+                variant = alt[alele_alt]
+
+                    # Check if the variant is an explicit one
+                if re.fullmatch(p_nucleotid_only, variant):
+                    phrase_aux[5] = variant
+                    continue
+                    # If its not
+                else:
+                    # (!) INFO: SVTYPE=BND
+                    # <id_ALT>
+                        # <DEL>
+                        # <INS>
+                        # <DUP>
+                        # <INV>
+                        # <CNV>
+
+                    # (!) Si X != REF => Interpretar dos edits
+                    # X]<>:p]
+                    # X[<>:p[
+                    # ]<>:p]X
+                    # [<>:p[X
 
         raw_data = VCF.readline()
