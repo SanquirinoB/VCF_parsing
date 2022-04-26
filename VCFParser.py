@@ -1,3 +1,4 @@
+from io import TextIOWrapper
 import re
 from unittest import case
 
@@ -5,6 +6,7 @@ class VCFParser():
     def __init__(self, VCF_path) -> None:
         # Reference to the VCF to be parsed
         self.file_path = VCF_path
+        self.VCF = None
 
         # Preference settings
         self.UnphasedAsPhased = True
@@ -29,6 +31,9 @@ class VCFParser():
         self.phrase_LenEdit = 0
 
         # Variables for VCF metadata processing
+        self.meta_ReferenceValues = {}
+        self.ID_samples = []
+        self.n_samples = 0
 
         # Variables for VCF record processing
         self.curr_Chrom = 0
@@ -42,6 +47,32 @@ class VCFParser():
         self.curr_Format = {}
         self.curr_AleleList = []
         self.curr_SVTYPE = "X"
+
+    def ProcessMETA(self):
+        # The first line readed is the VCF Version
+        # TODO: Querremos procesar esto? Quiza crear un assert de version
+        line = self.VCF.readline()
+        pair, dict_aux = [], {}
+
+        # The last line allowed will be just before header line
+        while line[:2] == "##":
+
+            if line[:9] == "##contig=": # line = "##contig=<ID=GL000224.1,assembly=b37,length=179693>"
+                          
+                for x in line[10:-1].split(","): # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"  
+                    pair = x.split("=")
+                    dict_aux[pair[0]] = pair[1]
+
+                ID = dict_aux.pop("ID") # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
+                self.meta_ReferenceValues[ID] = dict_aux # = {'GL000224.1': {'assembly': 'b37', 'length': '179693'}}
+            
+            # TODO: The rest of the lines
+            line = self.VCF.readline()
+        
+        # This last line its supposed to be the header line
+        self.ID_samples = line[9:]
+        self.n_samples = len(self.ID_samples) 
+
 
     def ProcessFORMAT(self, raw_FORMAT):
         """
@@ -105,22 +136,21 @@ class VCFParser():
         pass
 
     def StartParsing(self):
-        with open(self.file_path, 'r') as VCF:
-
+        with open(self.file_path, 'r') as aux_VCF:
+            
+            self.VCF = aux_VCF
             # Collect VCF metainformation
 
-            meta = VCF.readline()
+            self.ProcessMETA()
+            meta = self.VCF.readline()
 
             while meta[0:2] == "##":
                 # TODO: Save data
-                meta = VCF.readline()
+                meta = self.VCF.readline()
 
-            header = meta
+            
 
-            ID_samples = header[9:]
-            n_samples = len(ID_samples)
-
-            raw_record = VCF.readline()
+            raw_record = self.VCF.readline()
 
             while raw_record:
                 record = raw_record.split('\t')
@@ -149,8 +179,8 @@ class VCFParser():
                 """
 
                 # Over each sample
-                for i in range(n_samples):
-                    self.phase_INDV = ID_samples[i]
+                for i in range(self.n_samples):
+                    self.phase_INDV = self.ID_samples[i]
                     """
                     Remains:
                         self.phrase_Alele = 0
@@ -189,7 +219,8 @@ class VCFParser():
                             self.curr_SVTYPE = self.curr_Info.get("SVTYPE")
 
                             # We need to check what kind if SVTYPE is
-                            if (self.curr_SVTYPE == "DEL" and self.phrase_Edit == "<DEL>"):
+                                # No estoy segura de (self.curr_SVTYPE == "DEL" and self.phrase_Edit == "<DEL>")
+                            if (self.phrase_Edit == "<DEL>" or self.phrase_Edit == "<CN0>"):
                                 pos_END = int(self.curr_Info.get("END")) - 1 # Correction for 0 start
 
                                 self.phrase_Len = pos_END - self.phrase_Pos + 1 # I know +-1 is unnecesary, Its just for theorical coherence
@@ -220,12 +251,16 @@ class VCFParser():
                                 pass
                             elif (self.curr_SVTYPE == "BND"):
                                 # TODO: Handle
+                                    # X]<>:p]
+                                    # X[<>:p[
+                                    # ]<>:p]X
+                                    # [<>:p[X
                                 pass
 
                         else:
                             # TODO: Aqui caen todos los casos no manejados, crear un reporte de no soportados
                             pass
 
-                raw_record = VCF.readline()
+                raw_record = self.VCF.readline()
 
 
