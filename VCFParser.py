@@ -17,6 +17,11 @@ class VCFParser():
         self.p_record_line = re.compile(r"^#")
         self.p_nucleotid_only = re.compile(r"[ACTGN]+")
         self.p_SVTYPE = re.compile(r"SVTYPE=[^;]+")
+            # Case1 like AAA[<ctg>:2[, Case2 like AAA]<ctg>:2], Case3 like [<ctg>:2[AAA and Case4 like ]<ctg>:2]AAA
+        self.p_bndCase1 = re.compile(r"[ACTGN]+\[<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\[")
+        self.p_bndCase2 = re.compile(r"[ACTGN]+\]<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\]")
+        self.p_bndCase3 = re.compile(r"\[<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\[[ACTGN]+")
+        self.p_bndCase4 = re.compile(r"\]<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\][ACTGN]+")
 
         # Phrase base structure
             # Everything related to indexes will be fixed for start at 0
@@ -32,6 +37,7 @@ class VCFParser():
 
         # Variables for VCF metadata processing
         self.meta_ReferenceValues = {}
+        self.counter_contig = 0
         self.ID_samples = []
         self.n_samples = 0
 
@@ -58,13 +64,21 @@ class VCFParser():
         while line[:2] == "##":
 
             if line[:9] == "##contig=": # line = "##contig=<ID=GL000224.1,assembly=b37,length=179693>"
-                          
+
+                if not ("length" in line): # This value is not mandatory, so just in case
+                    # TODO: Debemos recuperar el archivo de referencia y recuperar el largo
+                    # de los strings
+                    print("Oh no")
+
                 for x in line[10:-1].split(","): # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"  
                     pair = x.split("=")
                     dict_aux[pair[0]] = pair[1]
 
-                ID = dict_aux.pop("ID") # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
-                self.meta_ReferenceValues[ID] = dict_aux # = {'GL000224.1': {'assembly': 'b37', 'length': '179693'}}
+                ID = dict_aux.get("ID") # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
+                dict_aux["ID"] = self.counter_contig # Set ID to a shorter internal value as new ID
+                self.counter_contig += 1
+
+                self.meta_ReferenceValues[ID] = dict_aux # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
             
             # TODO: The rest of the lines
             line = self.VCF.readline()
@@ -135,132 +149,136 @@ class VCFParser():
         # TODO: Implementar escritura en archivo
         pass
 
-    def StartParsing(self):
-        with open(self.file_path, 'r') as aux_VCF:
-            
-            self.VCF = aux_VCF
-            # Collect VCF metainformation
+    def ProcessRECORDS(self):
+    
+        raw_record = self.VCF.readline()
 
-            self.ProcessMETA()
-            meta = self.VCF.readline()
+        while raw_record:
+            record = raw_record.split('\t')
 
-            while meta[0:2] == "##":
-                # TODO: Save data
-                meta = self.VCF.readline()
+            # Filter check
+            if (self.DiscardNotPASSRecords and record[6] != "PASS"):
+                print("(!) WARNING|FILTER: Se ha descartado un registro por no cumplir con FILTER=PASS. Edit nro {}".format(i+1))
+                continue
 
-            
+            self.UpdateInternalValues(record)
+            raw_AleleFullList = record[9:]
 
-            raw_record = self.VCF.readline()
+            self.UpdateGenericPhraseValues()
+            """
+            Values setted at this point:
+                self.phrase_Chrom = self.curr_Chrom
+                self.phrase_Pos = self.curr_Pos
+                self.phrase_Len = len(self.curr_REF)
 
-            while raw_record:
-                record = raw_record.split('\t')
+            Remains:
+                self.phrase_INDV = "X"
+                self.phrase_Alele = 0
+                self.phrase_Edit = "X"
+                self.phrase_PosEdit = 0
+                self.phrase_LenEdit = 0
+            """
 
-                # Filter check
-                if (self.DiscardNotPASSRecords and record[6] != "PASS"):
-                    print("(!) WARNING|FILTER: Se ha descartado un registro por no cumplir con FILTER=PASS. Edit nro {}".format(i+1))
-                    continue
-
-                self.UpdateInternalValues(record)
-                raw_AleleFullList = record[9:]
-
-                self.UpdateGenericPhraseValues()
+            # Over each sample
+            for i in range(self.n_samples):
+                self.phase_INDV = self.ID_samples[i]
                 """
-                Values setted at this point:
-                    self.phrase_Chrom = self.curr_Chrom
-                    self.phrase_Pos = self.curr_Pos
-                    self.phrase_Len = len(self.curr_REF)
-
                 Remains:
-                    self.phrase_INDV = "X"
                     self.phrase_Alele = 0
                     self.phrase_Edit = "X"
                     self.phrase_PosEdit = 0
                     self.phrase_LenEdit = 0
                 """
 
-                # Over each sample
-                for i in range(self.n_samples):
-                    self.phase_INDV = self.ID_samples[i]
+                self.UpdateAlelesList(raw_AleleFullList[i])
+
+                for j in range(len(self.curr_AleleList)): # Over each alele
+
+                    if self.curr_AleleList[j] == 0: # If there's no change, we continue
+                        continue
+                    
+                    # Save Values
+                    self.phrase_Alele = j
+                    self.phrase_Edit = self.curr_AltList[self.phrase_Alele]
                     """
                     Remains:
-                        self.phrase_Alele = 0
-                        self.phrase_Edit = "X"
                         self.phrase_PosEdit = 0
                         self.phrase_LenEdit = 0
                     """
 
-                    self.UpdateAlelesList(raw_AleleFullList[i])
+                    # Check the edit
 
-                    for j in range(len(self.curr_AleleList)): # Over each alele
+                    if re.fullmatch(self.p_nucleotid_only, self.phrase_Edit): # If its an explicit edit
+                        self.phrase_PosEdit = 0
+                        self.phrase_LenEdit = 0
 
-                        if self.curr_AleleList[j] == 0: # If there's no change, we continue
-                            continue
-                        
-                        # Save Values
-                        self.phrase_Alele = j
-                        self.phrase_Edit = self.curr_AltList[self.phrase_Alele]
-                        """
-                        Remains:
-                            self.phrase_PosEdit = 0
-                            self.phrase_LenEdit = 0
-                        """
+                        self.WritePhrase() # Done
+                        continue
 
-                        # Check the edit
+                    elif self.curr_Info.contains_key("SVTYPE"): # If its an external reference edit, we should check the SVTYPE
+                        # TODO: Chequear si es necesario hacer una variable de clase
+                        self.curr_SVTYPE = self.curr_Info.get("SVTYPE")
 
-                        if re.fullmatch(self.p_nucleotid_only, self.phrase_Edit): # If its an explicit edit
+                        # We need to check what kind if SVTYPE is
+                            # No estoy segura de (self.curr_SVTYPE == "DEL" and self.phrase_Edit == "<DEL>")
+                        if (self.phrase_Edit == "<DEL>" or self.phrase_Edit == "<CN0>"):
+                            pos_END = int(self.curr_Info.get("END")) - 1 # Correction for 0 start
+
+                            self.phrase_Len = pos_END - self.phrase_Pos + 1 # I know +-1 is unnecesary, Its just for theorical coherence
+                            self.phrase_Edit = ""
                             self.phrase_PosEdit = 0
                             self.phrase_LenEdit = 0
 
                             self.WritePhrase() # Done
                             continue
-
-                        elif self.curr_Info.contains_key("SVTYPE"): # If its an external reference edit, we should check the SVTYPE
-                            # TODO: Chequear si es necesario hacer una variable de clase
-                            self.curr_SVTYPE = self.curr_Info.get("SVTYPE")
-
-                            # We need to check what kind if SVTYPE is
-                                # No estoy segura de (self.curr_SVTYPE == "DEL" and self.phrase_Edit == "<DEL>")
-                            if (self.phrase_Edit == "<DEL>" or self.phrase_Edit == "<CN0>"):
-                                pos_END = int(self.curr_Info.get("END")) - 1 # Correction for 0 start
-
-                                self.phrase_Len = pos_END - self.phrase_Pos + 1 # I know +-1 is unnecesary, Its just for theorical coherence
-                                self.phrase_Edit = ""
-                                self.phrase_PosEdit = 0
-                                self.phrase_LenEdit = 0
-
-                                self.WritePhrase() # Done
-                                continue
-
-                            elif (self.curr_SVTYPE == "INS"):
-                                # TODO: Handle
-                                # (!) Si X != REF => Interpretar dos edits
-                                    # X]<>:p]
-                                    # X[<>:p[
-                                    # ]<>:p]X
-                                    # [<>:p[X
-                                    # <wea>
+                        
+                        # TODO: No estoy segura de si esto es cierto. VERIFICAR
+                        # https://github.com/vcflib/vcflib/blob/master/src/Variant.cpp 243
+                        elif (self.curr_SVTYPE == "INS"):
+                            # TODO: Handle
+                            # (!) Si X != REF => Interpretar dos edits
+                            if re.match(self.p_bndCase1, self.phrase_Edit):
                                 pass
-                            elif (self.curr_SVTYPE == "DUP"):
-                                # TODO: Handle
+                            elif re.match(self.p_bndCase2, self.phrase_Edit):
                                 pass
-                            elif (self.curr_SVTYPE == "INV"):
-                                # TODO: Handle
+                            elif re.match(self.p_bndCase3, self.phrase_Edit):
                                 pass
-                            elif (self.curr_SVTYPE == "CNV"):
-                                # TODO: Handle
-                                pass
-                            elif (self.curr_SVTYPE == "BND"):
-                                # TODO: Handle
-                                    # X]<>:p]
-                                    # X[<>:p[
-                                    # ]<>:p]X
-                                    # [<>:p[X
+                            elif re.match(self.p_bndCase4, self.phrase_Edit):
                                 pass
 
-                        else:
-                            # TODO: Aqui caen todos los casos no manejados, crear un reporte de no soportados
+                        elif (self.curr_SVTYPE == "DUP"):
+                            # TODO: Handle
+                            pass
+                        elif (self.curr_SVTYPE == "INV"):
+                            # TODO: Handle
+                            pass
+                        elif (self.curr_SVTYPE == "CNV"):
+                            # TODO: Handle
+                            pass
+                        elif (self.curr_SVTYPE == "BND"):
+                            # TODO: Handle
+                                # X]<>:p]
+                                # X[<>:p[
+                                # ]<>:p]X
+                                # [<>:p[X
                             pass
 
-                raw_record = self.VCF.readline()
+                    else:
+                        # TODO: Aqui caen todos los casos no manejados, crear un reporte de no soportados
+                        pass
+
+            raw_record = self.VCF.readline()
+
+    def StartParsing(self):
+
+        with open(self.file_path, 'r') as aux_VCF:
+            
+            self.VCF = aux_VCF
+            # Collect VCF metainformation
+            self.ProcessMETA()    
+            # Interpretate edits
+            self.ProcessRECORDS()        
+
+
 
 
