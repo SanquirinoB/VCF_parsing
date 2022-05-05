@@ -5,8 +5,11 @@ from unittest import case
 class VCFParser():
     def __init__(self, VCF_path) -> None:
         # Reference to the VCF to be parsed
-        self.file_path = VCF_path
+        self.path_file = VCF_path
         self.VCF = None
+
+        self.path_fileParsed = VCF_path[-4:] + "_Parsed.txt"
+        self.VCFParsed = None
 
         # Preference settings
         self.UnphasedAsPhased = True
@@ -40,9 +43,10 @@ class VCFParser():
         self.counter_contig = 0
         self.ID_samples = []
         self.n_samples = 0
+        self.Lenght_Reference = 0
 
         # Variables for VCF record processing
-        self.curr_Chrom = 0
+        self.curr_Chrom = "X"
         self.curr_Pos = 0
         self.curr_ID = "X"
         self.curr_REF = "X"
@@ -53,6 +57,16 @@ class VCFParser():
         self.curr_Format = {}
         self.curr_AleleList = []
         self.curr_SVTYPE = "X"
+
+    def ReferenceIndexTransform(self, index):
+        return 2 * self.Lenght_Reference - index - 1
+
+    def CalculateInvertedReference(self):
+        # TODO: Recordar generar un reporte del META con el tema de la REF inv y meta_ReferenceValues
+        len_reference = 0
+        for ID in self.meta_ReferenceValues.keys():
+            len_reference += self.meta_ReferenceValues.get(ID).get("lenght")       
+
 
     def ProcessMETA(self):
         # The first line readed is the VCF Version
@@ -86,6 +100,7 @@ class VCFParser():
         # This last line its supposed to be the header line
         self.ID_samples = line[9:]
         self.n_samples = len(self.ID_samples) 
+        self.CalculateInvertedReference()
 
 
     def ProcessFORMAT(self, raw_FORMAT):
@@ -116,7 +131,7 @@ class VCFParser():
         Updates all internal variables which start with curr_*
         This information is needed for global record processing
         """
-        self.curr_Chrom = int(record[0])
+        self.curr_Chrom = record[0]
         self.curr_Pos = int(record[1])
         self.curr_ID = record[2]
         self.curr_REF = record[3]
@@ -146,8 +161,43 @@ class VCFParser():
         return match_SVTYPE.string[start + 7 : end]
 
     def WritePhrase(self):
-        # TODO: Implementar escritura en archivo
-        pass
+        phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(self.phrase_INDV,
+                                                            self.phrase_Chrom,
+                                                            self.phrase_Alele,
+                                                            self.phrase_Pos,
+                                                            self.phrase_Len,
+                                                            self.phrase_Edit,
+                                                            self.phrase_PosEdit,
+                                                            self.phrase_LenEdit)
+        # TODO: Este sistema funciona?
+        self.path_fileParsed.write(phrase)
+
+    def WriteInternalINV(self):
+        pos_END = None
+        pos_END = self.curr_Info.get("END")
+
+        if pos_END:
+            pos_END = int(pos_END) - 1
+            # TODO: Si cualquier pos > lenRef, se interpreta la inversa
+            self.phrase_Len = pos_END - self.curr_Pos
+            self.phrase_Edit = self.meta_ReferenceValues.get(self.curr_Chrom).get("ID")
+            self.phrase_PosEdit = self.ReferenceIndexTransform(pos_END)
+            self.phrase_LenEdit = self.phrase_Len
+        else:
+            print("(!!) ERROR|INV: Se ha encontrado una inversion sin campo END, se descartará el edit.")
+            return
+
+        self.WritePhrase()
+
+    def WriteDeletion(self):
+        pos_END = int(self.curr_Info.get("END")) - 1 # Correction for 0 start
+
+        self.phrase_Len = pos_END - self.phrase_Pos + 1 # I know +-1 is unnecesary, Its just for theorical coherence
+        self.phrase_Edit = ""
+        self.phrase_PosEdit = 0
+        self.phrase_LenEdit = 0
+
+        self.WritePhrase() # Done
 
     def ProcessRECORDS(self):
     
@@ -222,20 +272,13 @@ class VCFParser():
                         # We need to check what kind if SVTYPE is
                             # No estoy segura de (self.curr_SVTYPE == "DEL" and self.phrase_Edit == "<DEL>")
                         if (self.phrase_Edit == "<DEL>" or self.phrase_Edit == "<CN0>"):
-                            pos_END = int(self.curr_Info.get("END")) - 1 # Correction for 0 start
-
-                            self.phrase_Len = pos_END - self.phrase_Pos + 1 # I know +-1 is unnecesary, Its just for theorical coherence
-                            self.phrase_Edit = ""
-                            self.phrase_PosEdit = 0
-                            self.phrase_LenEdit = 0
-
-                            self.WritePhrase() # Done
+                            self.WriteDeletion()
                             continue
                         
                         # TODO: No estoy segura de si esto es cierto. VERIFICAR
-                        # https://github.com/vcflib/vcflib/blob/master/src/Variant.cpp 243
+                        # https://github.com/vcflib/vcflib/blob/master/src/Variant.cpp 359
                         elif (self.curr_SVTYPE == "INS"):
-                            # TODO: Handle
+                            # TODO: Las inserciones e inversiones se ven aqui
                             # (!) Si X != REF => Interpretar dos edits
                             if re.match(self.p_bndCase1, self.phrase_Edit):
                                 pass
@@ -246,21 +289,17 @@ class VCFParser():
                             elif re.match(self.p_bndCase4, self.phrase_Edit):
                                 pass
 
+                        elif (self.curr_SVTYPE == "INV"):
+                            assert self.phrase_Edit == "<INV>"
+                            self.WriteInternalINV()
+                            continue
+
                         elif (self.curr_SVTYPE == "DUP"):
                             # TODO: Handle
                             pass
-                        elif (self.curr_SVTYPE == "INV"):
-                            # TODO: Handle
-                            pass
+
                         elif (self.curr_SVTYPE == "CNV"):
                             # TODO: Handle
-                            pass
-                        elif (self.curr_SVTYPE == "BND"):
-                            # TODO: Handle
-                                # X]<>:p]
-                                # X[<>:p[
-                                # ]<>:p]X
-                                # [<>:p[X
                             pass
 
                     else:
@@ -271,13 +310,15 @@ class VCFParser():
 
     def StartParsing(self):
 
-        with open(self.file_path, 'r') as aux_VCF:
-            
-            self.VCF = aux_VCF
-            # Collect VCF metainformation
-            self.ProcessMETA()    
-            # Interpretate edits
-            self.ProcessRECORDS()        
+        with open(self.path_fileParsed, 'w') as aux_VCFParsed:
+            self.path_fileParsed = aux_VCFParsed
+            with open(self.path_file, 'r') as aux_VCF:
+                
+                self.VCF = aux_VCF
+                # Collect VCF metainformation
+                self.ProcessMETA()    
+                # Interpretate edits
+                self.ProcessRECORDS()        
 
 
 
