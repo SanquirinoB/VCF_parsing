@@ -110,8 +110,12 @@ class VCFParser():
             line = self.VCF.readline()[:-1]
         
         # This last line its supposed to be the header line
-        self.ID_samples = line[9:]
+        self.ID_samples = line.split("\t")[9:]
         self.n_samples = len(self.ID_samples) 
+        if self.isDebugMode: 
+            print("Curr n_samples: ", self.n_samples)
+            print("Curr IDs: ", self.ID_samples)
+            
         self.CalculateInvertedReference()
 
 
