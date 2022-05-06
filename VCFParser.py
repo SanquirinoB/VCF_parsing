@@ -113,7 +113,7 @@ class VCFParser():
         self.n_samples = len(tmp_ID_samples) 
         self.ID_samples = {}
         for i in range(self.n_samples):
-            self.ID_samples[tmp_ID_samples[i]] = i
+            self.ID_samples[i] = tmp_ID_samples[i]
         
         if self.isDebugMode: 
             print("Curr n_samples: ", self.n_samples)
@@ -293,7 +293,7 @@ class VCFParser():
 
             # Over each sample
             for i in range(self.n_samples):
-                if self.isDebugMode: print("For sample ", self.ID_samples[i])
+                if self.isDebugMode: print("For sample ", self.ID_samples.get(i))
                 # Set internal id
                 self.phrase_INDV = i
 
