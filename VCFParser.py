@@ -364,15 +364,14 @@ class VCFParser():
 
     def StartParsing(self):
 
-        with open(self.path_fileParsed, 'w') as aux_VCFParsed:
+        with open(self.path_file, 'r') as aux_VCF, open(self.path_fileParsed, 'w') as aux_VCFParsed:
+            
+            self.VCF = aux_VCF
             self.VCFParsed = aux_VCFParsed
-            with open(self.path_file, 'r') as aux_VCF:
-                
-                self.VCF = aux_VCF
-                # Collect VCF metainformation
-                self.ProcessMETA()    
-                # Interpretate edits
-                self.ProcessRECORDS()        
+            # Collect VCF metainformation
+            self.ProcessMETA()    
+            # Interpretate edits
+            self.ProcessRECORDS()        
 
 
 
