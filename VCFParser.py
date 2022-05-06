@@ -71,7 +71,7 @@ class VCFParser():
         len_reference = 0
         for ID in self.meta_ReferenceValues.keys():
             if ID:
-                len_reference += int(self.meta_ReferenceValues.get(ID).get("lenght"))    
+                len_reference += int(self.meta_ReferenceValues.get(ID).get("length"))    
             else:
                 exit(1)   
 
