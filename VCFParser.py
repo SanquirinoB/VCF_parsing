@@ -181,7 +181,7 @@ class VCFParser():
         else:
             self.curr_AleleList = raw_AleleList.split("|")
 
-        self.curr_AleleList = [if alele != ".": int(alele) else self.MISS_AleleAlt for x in self.curr_AleleList]
+        self.curr_AleleList = [int(x) if x != "." else self.MISS_AleleAlt for x in self.curr_AleleList]
 
     def GetSVTYPE(self, match_SVTYPE):
         start, end = match_SVTYPE.span()
