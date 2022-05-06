@@ -1,4 +1,4 @@
-import VCFParser
+from VCFParser import VCFParser
 import sys
 
 if __name__ == "__main__":
