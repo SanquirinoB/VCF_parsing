@@ -10,6 +10,7 @@ class VCFParser():
         # Reference to the VCF to be parsed
         self.path_file = VCF_path
         self.VCF = None
+        self.MISSING = "."
 
         self.path_fileParsed = VCF_path[-4:] + "_Parsed.txt"
         self.VCFParsed = None
