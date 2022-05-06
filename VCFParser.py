@@ -100,7 +100,6 @@ class VCFParser():
                 ID = dict_aux.get("ID") # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
                 dict_aux["ID"] = self.counter_contig # Set ID to a shorter internal value as new ID
                 self.counter_contig += 1
-                dict_aux.pop("ID")
 
                 self.meta_ReferenceValues[ID] = dict_aux # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
             
@@ -172,9 +171,9 @@ class VCFParser():
 
         if ("/" in raw_AleleList):
             raw_AleleList = raw_AleleList.replace("/", "|")
-            return raw_AleleList.split("|") if self.UnphasedAsPhased else []
+            self.curr_AleleList = raw_AleleList.split("|") if self.UnphasedAsPhased else []
         else:
-            return raw_AleleList.split("|")
+            self.curr_AleleList = raw_AleleList.split("|")
 
     def GetSVTYPE(self, match_SVTYPE):
         start, end = match_SVTYPE.span()
@@ -202,6 +201,7 @@ class VCFParser():
                                                             values_phrase[6],
                                                             values_phrase[7])
         # TODO: Este sistema funciona?
+        if self.isDebugMode: print("Phrase to be writed: ", phrase)
         self.VCFParsed.write(phrase)
 
     def WriteInternalINV(self):
@@ -289,12 +289,15 @@ class VCFParser():
 
             # Over each sample
             for i in range(self.n_samples):
-                self.phase_INDV = self.ID_samples[i]
+                if self.isDebugMode: print("For sample ", self.ID_samples[i])
+                # Set internal id
+                self.phrase_INDV = self.meta_ReferenceValues.get(self.ID_samples[i]).get("ID")
 
                 self.UpdateAlelesList(raw_AleleFullList[i])
 
                 for j in range(len(self.curr_AleleList)): # Over each alele
-
+                    if self.isDebugMode: print("For alele ", j)
+                    
                     if self.curr_AleleList[j] == 0: # If there's no change, we continue
                         continue
 
