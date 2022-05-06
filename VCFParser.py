@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from re import re
+import re
 
 class VCFParser():
     def __init__(self, VCF_path, debug):
@@ -115,7 +115,7 @@ class VCFParser():
         if self.isDebugMode: 
             print("Curr n_samples: ", self.n_samples)
             print("Curr IDs: ", self.ID_samples)
-            
+
         self.CalculateInvertedReference()
 
 
