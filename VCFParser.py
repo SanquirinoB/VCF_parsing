@@ -47,7 +47,7 @@ class VCFParser():
         # Variables for VCF metadata processing
         self.meta_ReferenceValues = {}
         self.counter_contig = 0
-        self.ID_samples = []
+        self.ID_samples = {}
         self.n_samples = 0
         self.Lenght_Reference = 0
 
@@ -98,7 +98,7 @@ class VCFParser():
                     dict_aux[pair[0]] = pair[1]
 
                 ID = dict_aux.get("ID") # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
-                dict_aux["ID"] = self.counter_contig # Set ID to a shorter internal value as new ID
+                dict_aux["internalID"] = self.counter_contig # Set ID to a shorter internal value as new ID
                 self.counter_contig += 1
 
                 self.meta_ReferenceValues[ID] = dict_aux # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
@@ -109,8 +109,12 @@ class VCFParser():
             line = self.VCF.readline()[:-1]
         
         # This last line its supposed to be the header line
-        self.ID_samples = line.split("\t")[9:]
-        self.n_samples = len(self.ID_samples) 
+        tmp_ID_samples = line.split("\t")[9:]
+        self.n_samples = len(tmp_ID_samples) 
+        self.ID_samples = {}
+        for i in range(self.n_samples):
+            self.ID_samples[tmp_ID_samples[i]] = i
+        
         if self.isDebugMode: 
             print("Curr n_samples: ", self.n_samples)
             print("Curr IDs: ", self.ID_samples)
@@ -291,7 +295,7 @@ class VCFParser():
             for i in range(self.n_samples):
                 if self.isDebugMode: print("For sample ", self.ID_samples[i])
                 # Set internal id
-                self.phrase_INDV = self.meta_ReferenceValues.get(self.ID_samples[i]).get("ID")
+                self.phrase_INDV = i
 
                 self.UpdateAlelesList(raw_AleleFullList[i])
 
