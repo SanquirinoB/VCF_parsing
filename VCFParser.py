@@ -200,7 +200,7 @@ class VCFParser():
     #     self.path_fileParsed.write(phrase)
 
     def WritePhrase(self, values_phrase):
-        phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(values_phrase[0],
+        phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(values_phrase[0],
                                                             values_phrase[1],
                                                             values_phrase[2],
                                                             values_phrase[3],
