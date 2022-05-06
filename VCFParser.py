@@ -11,6 +11,8 @@ class VCFParser():
         self.path_file = VCF_path
         self.VCF = None
         self.MISSING = "."
+        # TODO: Hacer configurable a gusto
+        self.MISS_AleleAlt = 0
 
         self.path_fileParsed = VCF_path[:-4] + "_Parsed.txt"
         self.VCFParsed = None
@@ -178,6 +180,8 @@ class VCFParser():
             self.curr_AleleList = raw_AleleList.split("|") if self.UnphasedAsPhased else []
         else:
             self.curr_AleleList = raw_AleleList.split("|")
+
+        self.curr_AleleList = [if alele != ".": int(alele) else self.MISS_AleleAlt for x in self.curr_AleleList]
 
     def GetSVTYPE(self, match_SVTYPE):
         start, end = match_SVTYPE.span()
