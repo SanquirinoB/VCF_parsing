@@ -38,6 +38,8 @@ class VCFParser():
         self.phrase_PosEdit = 0
         self.phrase_LenEdit = 0
 
+        self.phrase_Cache = []
+
         # Variables for VCF metadata processing
         self.meta_ReferenceValues = {}
         self.counter_contig = 0
@@ -160,15 +162,27 @@ class VCFParser():
         start, end = match_SVTYPE.span()
         return match_SVTYPE.string[start + 7 : end]
 
-    def WritePhrase(self):
-        phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(self.phrase_INDV,
-                                                            self.phrase_Chrom,
-                                                            self.phrase_Alele,
-                                                            self.phrase_Pos,
-                                                            self.phrase_Len,
-                                                            self.phrase_Edit,
-                                                            self.phrase_PosEdit,
-                                                            self.phrase_LenEdit)
+    # def WritePhrase2(self):
+    #     phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(self.phrase_INDV,
+    #                                                         self.phrase_Chrom,
+    #                                                         self.phrase_Alele,
+    #                                                         self.phrase_Pos,
+    #                                                         self.phrase_Len,
+    #                                                         self.phrase_Edit,
+    #                                                         self.phrase_PosEdit,
+    #                                                         self.phrase_LenEdit)
+    #     # TODO: Este sistema funciona?
+    #     self.path_fileParsed.write(phrase)
+
+    def WritePhrase(self, values_phrase):
+        phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(values_phrase[0],
+                                                            values_phrase[1],
+                                                            values_phrase[2],
+                                                            values_phrase[3],
+                                                            values_phrase[4],
+                                                            values_phrase[5],
+                                                            values_phrase[6],
+                                                            values_phrase[7])
         # TODO: Este sistema funciona?
         self.path_fileParsed.write(phrase)
 
@@ -199,6 +213,39 @@ class VCFParser():
 
         self.WritePhrase() # Done
 
+    def AddToPhraseCache(self):
+        tmp_phrase = [-1, # self.phrase_INDV to complete
+                    self.phrase_Chrom,
+                    -1, # self.phrase_Alele to complete
+                    self.phrase_Pos,
+                    self.phrase_Len,
+                    self.phrase_Edit,
+                    self.phrase_PosEdit,
+                    self.phrase_LenEdit]
+        self.phrase_Cache.append(tmp_phrase)
+
+    def ProcessVariants(self):
+        """
+        Remains:
+                self.phrase_INDV = "X"
+                self.phrase_Alele = 0
+                self.phrase_Edit = "X"
+                self.phrase_PosEdit = 0
+                self.phrase_LenEdit = 0
+        """
+        for alt in self.curr_AltList:
+            if re.fullmatch(self.p_nucleotid_only, alt): # If its an explicit edit
+                self.phrase_PosEdit = 0
+                self.phrase_LenEdit = 0
+                self.phrase_Edit = alt
+
+                self.AddToPhraseCache() # Done
+            else:
+                print("Jaja perate")
+                
+
+
+
     def ProcessRECORDS(self):
     
         raw_record = self.VCF.readline()
@@ -215,30 +262,12 @@ class VCFParser():
             raw_AleleFullList = record[9:]
 
             self.UpdateGenericPhraseValues()
-            """
-            Values setted at this point:
-                self.phrase_Chrom = self.curr_Chrom
-                self.phrase_Pos = self.curr_Pos
-                self.phrase_Len = len(self.curr_REF)
 
-            Remains:
-                self.phrase_INDV = "X"
-                self.phrase_Alele = 0
-                self.phrase_Edit = "X"
-                self.phrase_PosEdit = 0
-                self.phrase_LenEdit = 0
-            """
+            self.ProcessVariants()
 
             # Over each sample
             for i in range(self.n_samples):
                 self.phase_INDV = self.ID_samples[i]
-                """
-                Remains:
-                    self.phrase_Alele = 0
-                    self.phrase_Edit = "X"
-                    self.phrase_PosEdit = 0
-                    self.phrase_LenEdit = 0
-                """
 
                 self.UpdateAlelesList(raw_AleleFullList[i])
 
@@ -246,65 +275,69 @@ class VCFParser():
 
                     if self.curr_AleleList[j] == 0: # If there's no change, we continue
                         continue
-                    
-                    # Save Values
-                    self.phrase_Alele = j
-                    self.phrase_Edit = self.curr_AltList[self.phrase_Alele]
-                    """
-                    Remains:
-                        self.phrase_PosEdit = 0
-                        self.phrase_LenEdit = 0
-                    """
 
-                    # Check the edit
+                    tmp_values_phrase = self.phrase_Cache[self.curr_AleleList[j] - 1]
+                    tmp_values_phrase[0] = self.phrase_INDV
+                    tmp_values_phrase[2] = j
 
-                    if re.fullmatch(self.p_nucleotid_only, self.phrase_Edit): # If its an explicit edit
-                        self.phrase_PosEdit = 0
-                        self.phrase_LenEdit = 0
+                    self.WritePhrase(tmp_values_phrase)
 
-                        self.WritePhrase() # Done
-                        continue
+                    # """
+                    # Remains:
+                    #     self.phrase_PosEdit = 0
+                    #     self.phrase_LenEdit = 0
+                    # """
 
-                    elif self.curr_Info.contains_key("SVTYPE"): # If its an external reference edit, we should check the SVTYPE
-                        # TODO: Chequear si es necesario hacer una variable de clase
-                        self.curr_SVTYPE = self.curr_Info.get("SVTYPE")
+                    # # Check the edit
 
-                        # We need to check what kind if SVTYPE is
-                            # No estoy segura de (self.curr_SVTYPE == "DEL" and self.phrase_Edit == "<DEL>")
-                        if (self.phrase_Edit == "<DEL>" or self.phrase_Edit == "<CN0>"):
-                            self.WriteDeletion()
-                            continue
+                    # if re.fullmatch(self.p_nucleotid_only, self.phrase_Edit): # If its an explicit edit
+                    #     self.phrase_PosEdit = 0
+                    #     self.phrase_LenEdit = 0
+
+                    #     self.WritePhrase() # Done
+                    #     continue
+
+                    # elif self.curr_Info.contains_key("SVTYPE"): # If its an external reference edit, we should check the SVTYPE
+                    #     # TODO: Chequear si es necesario hacer una variable de clase
+                    #     self.curr_SVTYPE = self.curr_Info.get("SVTYPE")
+                    #     bool_HasEND = self.curr
+
+                    #     # We need to check what kind if SVTYPE is
+                    #         # No estoy segura de (self.curr_SVTYPE == "DEL" and self.phrase_Edit == "<DEL>")
+                    #     if (self.phrase_Edit == "<DEL>" or self.phrase_Edit == "<CN0>"):
+                    #         self.WriteDeletion()
+                    #         continue
                         
-                        # TODO: No estoy segura de si esto es cierto. VERIFICAR
-                        # https://github.com/vcflib/vcflib/blob/master/src/Variant.cpp 359
-                        elif (self.curr_SVTYPE == "INS"):
-                            # TODO: Las inserciones e inversiones se ven aqui
-                            # (!) Si X != REF => Interpretar dos edits
-                            if re.match(self.p_bndCase1, self.phrase_Edit):
-                                pass
-                            elif re.match(self.p_bndCase2, self.phrase_Edit):
-                                pass
-                            elif re.match(self.p_bndCase3, self.phrase_Edit):
-                                pass
-                            elif re.match(self.p_bndCase4, self.phrase_Edit):
-                                pass
+                    #     # TODO: No estoy segura de si esto es cierto. VERIFICAR
+                    #     # https://github.com/vcflib/vcflib/blob/master/src/Variant.cpp 359
+                    #     elif (self.curr_SVTYPE == "INS"):
+                    #         # TODO: Las inserciones e inversiones se ven aqui
+                    #         # (!) Si X != REF => Interpretar dos edits
+                    #         if re.match(self.p_bndCase1, self.phrase_Edit):
+                    #             pass
+                    #         elif re.match(self.p_bndCase2, self.phrase_Edit):
+                    #             pass
+                    #         elif re.match(self.p_bndCase3, self.phrase_Edit):
+                    #             pass
+                    #         elif re.match(self.p_bndCase4, self.phrase_Edit):
+                    #             pass
 
-                        elif (self.curr_SVTYPE == "INV"):
-                            assert self.phrase_Edit == "<INV>"
-                            self.WriteInternalINV()
-                            continue
+                    #     elif (self.curr_SVTYPE == "INV"):
+                    #         assert self.phrase_Edit == "<INV>"
+                    #         self.WriteInternalINV()
+                    #         continue
 
-                        elif (self.curr_SVTYPE == "DUP"):
-                            # TODO: Handle
-                            pass
+                    #     elif (self.curr_SVTYPE == "DUP"):
+                    #         # TODO: Handle
+                    #         pass
 
-                        elif (self.curr_SVTYPE == "CNV"):
-                            # TODO: Handle
-                            pass
+                    #     elif (self.curr_SVTYPE == "CNV"):
+                    #         # TODO: Handle
+                    #         pass
 
-                    else:
-                        # TODO: Aqui caen todos los casos no manejados, crear un reporte de no soportados
-                        pass
+                    # else:
+                    #     # TODO: Aqui caen todos los casos no manejados, crear un reporte de no soportados
+                    #     pass
 
             raw_record = self.VCF.readline()
 
