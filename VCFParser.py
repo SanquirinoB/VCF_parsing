@@ -12,7 +12,7 @@ class VCFParser():
         self.VCF = None
         self.MISSING = "."
 
-        self.path_fileParsed = VCF_path[-4:] + "_Parsed.txt"
+        self.path_fileParsed = VCF_path[:-4] + "_Parsed.txt"
         self.VCFParsed = None
 
         # Preference settings
