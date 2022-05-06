@@ -264,7 +264,7 @@ class VCFParser():
 
             # Filter check
             if (self.DiscardNotPASSRecords and record[6] != "PASS"):
-                print("(!) WARNING|FILTER: Se ha descartado un registro por no cumplir con FILTER=PASS. Edit nro {}".format(i+1))
+                print("(!) WARNING|FILTER: Se ha descartado un registro por no cumplir con FILTER=PASS. Edit nro {}".format(-1))
                 continue
 
             self.UpdateInternalValues(record)
