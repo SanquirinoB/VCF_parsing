@@ -1,6 +1,7 @@
-from io import TextIOWrapper
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import re
-from unittest import case
 
 class VCFParser():
     def __init__(self, VCF_path):
