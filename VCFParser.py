@@ -115,6 +115,7 @@ class VCFParser():
         if self.isDebugMode: 
             print("Curr n_samples: ", self.n_samples)
             print("Curr IDs: ", self.ID_samples)
+            print("Destination path: ", self.path_fileParsed)
 
         self.CalculateInvertedReference()
 
@@ -201,7 +202,7 @@ class VCFParser():
                                                             values_phrase[6],
                                                             values_phrase[7])
         # TODO: Este sistema funciona?
-        self.path_fileParsed.write(phrase)
+        self.VCFParsed.write(phrase)
 
     def WriteInternalINV(self):
         pos_END = None
@@ -364,7 +365,7 @@ class VCFParser():
     def StartParsing(self):
 
         with open(self.path_fileParsed, 'w') as aux_VCFParsed:
-            self.path_fileParsed = aux_VCFParsed
+            self.VCFParsed = aux_VCFParsed
             with open(self.path_file, 'r') as aux_VCF:
                 
                 self.VCF = aux_VCF
