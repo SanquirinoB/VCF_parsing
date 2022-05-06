@@ -79,7 +79,7 @@ class VCFParser():
     def ProcessMETA(self):
         # The first line readed is the VCF Version
         # TODO: Querremos procesar esto? Quiza crear un assert de version
-        line = self.VCF.readline()
+        line = self.VCF.readline()[:-1]
         pair, dict_aux = [], {}
 
         # The last line allowed will be just before header line
@@ -92,7 +92,7 @@ class VCFParser():
                     # de los strings
                     print("Oh no")
 
-                for x in line[10:-2].split(","): # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"  
+                for x in line[10:-1].split(","): # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"  
                     pair = x.split("=")
                     dict_aux[pair[0]] = pair[1]
 
@@ -106,7 +106,7 @@ class VCFParser():
             if self.isDebugMode: print(self.meta_ReferenceValues)
 
             # TODO: The rest of the lines
-            line = self.VCF.readline()
+            line = self.VCF.readline()[:-1]
         
         # This last line its supposed to be the header line
         self.ID_samples = line[9:]
@@ -260,7 +260,10 @@ class VCFParser():
         raw_record = self.VCF.readline()
 
         while raw_record:
-            record = raw_record.split('\t')
+            record = raw_record[:-1].split('\t')
+
+            if self.isDebugMode: print("Current record: ", record)
+
 
             # Filter check
             if (self.DiscardNotPASSRecords and record[6] != "PASS"):
@@ -347,7 +350,6 @@ class VCFParser():
                     # else:
                     #     # TODO: Aqui caen todos los casos no manejados, crear un reporte de no soportados
                     #     pass
-
             raw_record = self.VCF.readline()
 
     def StartParsing(self):
