@@ -3,7 +3,7 @@ import re
 from unittest import case
 
 class VCFParser():
-    def __init__(self, VCF_path) -> None:
+    def __init__(self, VCF_path):
         # Reference to the VCF to be parsed
         self.path_file = VCF_path
         self.VCF = None
