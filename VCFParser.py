@@ -4,7 +4,9 @@
 import re
 
 class VCFParser():
-    def __init__(self, VCF_path):
+    def __init__(self, VCF_path, debug):
+        # Debug
+        self.isDebugMode = debug
         # Reference to the VCF to be parsed
         self.path_file = VCF_path
         self.VCF = None
@@ -68,7 +70,10 @@ class VCFParser():
         # TODO: Recordar generar un reporte del META con el tema de la REF inv y meta_ReferenceValues
         len_reference = 0
         for ID in self.meta_ReferenceValues.keys():
-            len_reference += self.meta_ReferenceValues.get(ID).get("lenght")       
+            if ID:
+                len_reference += self.meta_ReferenceValues.get(ID).get("lenght")    
+            else:
+                exit(1)   
 
 
     def ProcessMETA(self):
@@ -97,6 +102,8 @@ class VCFParser():
 
                 self.meta_ReferenceValues[ID] = dict_aux # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
             
+            if self.isDebugMode: print(self.meta_ReferenceValues)
+
             # TODO: The rest of the lines
             line = self.VCF.readline()
         
