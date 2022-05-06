@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import re
+from re import re
 
 class VCFParser():
     def __init__(self, VCF_path, debug):
@@ -149,6 +149,8 @@ class VCFParser():
         self.curr_ID = record[2]
         self.curr_REF = record[3]
         self.curr_AltList = record[4].split(',')
+        if self.isDebugMode: print("Current AltList: ", self.curr_AltList)
+
         self.curr_Qual = record[5]
         self.curr_Filter = record[6]
         self.ProcessINFO(record[7])
