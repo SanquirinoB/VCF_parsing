@@ -129,6 +129,7 @@ class VCFParser():
         self.curr_Format = dict_FormatIndex
 
     def ProcessINFO(self, raw_INFO):
+        if raw_INFO == self.MISSING: return
         list_INFO = raw_INFO.split(";")
         dict_INFO = {}
         for infoPair in list_INFO:
