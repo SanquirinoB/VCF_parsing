@@ -71,7 +71,7 @@ class VCFParser():
         len_reference = 0
         for ID in self.meta_ReferenceValues.keys():
             if ID:
-                len_reference += self.meta_ReferenceValues.get(ID).get("lenght")    
+                len_reference += int(self.meta_ReferenceValues.get(ID).get("lenght"))    
             else:
                 exit(1)   
 
@@ -85,20 +85,21 @@ class VCFParser():
         # The last line allowed will be just before header line
         while line[:2] == "##":
 
-            if line[:9] == "##contig=": # line = "##contig=<ID=GL000224.1,assembly=b37,length=179693>"
+            if line[:9] == "##contig=": # line = "##contig=<ID=GL000224.1,assembly=b37,length=179693>\n"
 
                 if not ("length" in line): # This value is not mandatory, so just in case
                     # TODO: Debemos recuperar el archivo de referencia y recuperar el largo
                     # de los strings
                     print("Oh no")
 
-                for x in line[10:-1].split(","): # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"  
+                for x in line[10:-2].split(","): # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"  
                     pair = x.split("=")
                     dict_aux[pair[0]] = pair[1]
 
                 ID = dict_aux.get("ID") # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
                 dict_aux["ID"] = self.counter_contig # Set ID to a shorter internal value as new ID
                 self.counter_contig += 1
+                dict_aux.pop("ID")
 
                 self.meta_ReferenceValues[ID] = dict_aux # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
             
