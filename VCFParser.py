@@ -272,9 +272,6 @@ class VCFParser():
     def CleanUpData(self):
         self.phrase_Cache = []
 
-
-
-
     def ProcessRECORDS(self):
     
         raw_record = self.VCF.readline()
@@ -282,7 +279,6 @@ class VCFParser():
         while raw_record:
             record = raw_record[:-1].split('\t')
 
-            # TODO
             self.CleanUpData()
 
             if self.isDebugMode: print("Current record: ", record)
@@ -295,6 +291,7 @@ class VCFParser():
                 continue
 
             self.UpdateInternalValues(record)
+
             raw_AleleFullList = record[9:]
 
             self.UpdateGenericPhraseValues()
@@ -319,16 +316,7 @@ class VCFParser():
                     tmp_values_phrase[0] = self.phrase_INDV
                     tmp_values_phrase[2] = j
 
-                    # TODO: No se actualiza correctamente, repite el edit
                     self.WritePhrase(tmp_values_phrase)
-
-                    # """
-                    # Remains:
-                    #     self.phrase_PosEdit = 0
-                    #     self.phrase_LenEdit = 0
-                    # """
-
-                    # # Check the edit
 
                     # if re.fullmatch(self.p_nucleotid_only, self.phrase_Edit): # If its an explicit edit
                     #     self.phrase_PosEdit = 0
