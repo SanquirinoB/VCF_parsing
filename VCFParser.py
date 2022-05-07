@@ -268,7 +268,10 @@ class VCFParser():
                 self.AddToPhraseCache() # Done
             else:
                 print("Jaja perate")
-                
+    
+    def CleanUpData(self):
+        self.phrase_Cache = []
+
 
 
 
@@ -278,6 +281,9 @@ class VCFParser():
 
         while raw_record:
             record = raw_record[:-1].split('\t')
+
+            # TODO
+            self.CleanUpData()
 
             if self.isDebugMode: print("Current record: ", record)
 
@@ -304,7 +310,7 @@ class VCFParser():
                 self.UpdateAlelesList(raw_AleleFullList[i])
 
                 for j in range(len(self.curr_AleleList)): # Over each alele
-                    if self.isDebugMode: print("For alele ", j)
+                    if self.isDebugMode: print("For alele ", j, "with variant index", self.curr_AleleList[j] - 1)
                     
                     if self.curr_AleleList[j] == 0: # If there's no change, we continue
                         continue
@@ -313,6 +319,7 @@ class VCFParser():
                     tmp_values_phrase[0] = self.phrase_INDV
                     tmp_values_phrase[2] = j
 
+                    # TODO: No se actualiza correctamente, repite el edit
                     self.WritePhrase(tmp_values_phrase)
 
                     # """
