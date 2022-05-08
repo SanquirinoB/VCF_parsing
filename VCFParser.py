@@ -25,12 +25,13 @@ class VCFParser():
         self.p_metainfo_line = re.compile(r"^##")
         self.p_record_line = re.compile(r"^#")
         self.p_nucleotid_only = re.compile(r"[ACTGN]+")
+        self.p_cnv_record = re.compile(r"<CN[1-9][0-9]*>") # => <CNi> where i >= 1
         self.p_SVTYPE = re.compile(r"SVTYPE=[^;]+")
             # Case1 like AAA[<ctg>:2[, Case2 like AAA]<ctg>:2], Case3 like [<ctg>:2[AAA and Case4 like ]<ctg>:2]AAA
-        self.p_bndCase1 = re.compile(r"[ACTGN]+\[<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\[")
-        self.p_bndCase2 = re.compile(r"[ACTGN]+\]<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\]")
-        self.p_bndCase3 = re.compile(r"\[<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\[[ACTGN]+")
-        self.p_bndCase4 = re.compile(r"\]<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\][ACTGN]+")
+        # self.p_bndCase1 = re.compile(r"[ACTGN]+\[<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\[")
+        # self.p_bndCase2 = re.compile(r"[ACTGN]+\]<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\]")
+        # self.p_bndCase3 = re.compile(r"\[<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\[[ACTGN]+")
+        # self.p_bndCase4 = re.compile(r"\]<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\][ACTGN]+")
 
         # Phrase base structure
             # Everything related to indexes will be fixed for start at 0
@@ -58,7 +59,7 @@ class VCFParser():
         self.curr_Pos = 0
         self.curr_ID = "X"
         self.curr_REF = "X"
-        self.curr_Alt = "X"
+        self.curr_AltIndex = 0
         self.curr_Qual = "X"
         self.curr_Filter = "X"
         self.curr_Info = {}
@@ -77,7 +78,6 @@ class VCFParser():
                 len_reference += int(self.meta_ReferenceValues.get(ID).get("length"))    
             else:
                 exit(1)   
-
 
     def ProcessMETA(self):
         # The first line readed is the VCF Version
@@ -124,7 +124,6 @@ class VCFParser():
 
         self.CalculateInvertedReference()
 
-
     def ProcessFORMAT(self, raw_FORMAT):
         """
         Creates the dictionary of indexes for the sample data interpretation
@@ -145,6 +144,10 @@ class VCFParser():
         dict_INFO = {}
         for infoPair in list_INFO:
             key, value = infoPair.split("=")
+
+            if key == "END" or key == "SVLEN":
+                value = [int(x) for x in value.split(",")]
+
             dict_INFO[key] = value
 
         self.curr_Info = dict_INFO
@@ -187,18 +190,6 @@ class VCFParser():
         start, end = match_SVTYPE.span()
         return match_SVTYPE.string[start + 7 : end]
 
-    # def WritePhrase2(self):
-    #     phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t".format(self.phrase_INDV,
-    #                                                         self.phrase_Chrom,
-    #                                                         self.phrase_Alele,
-    #                                                         self.phrase_Pos,
-    #                                                         self.phrase_Len,
-    #                                                         self.phrase_Edit,
-    #                                                         self.phrase_PosEdit,
-    #                                                         self.phrase_LenEdit)
-    #     # TODO: Este sistema funciona?
-    #     self.path_fileParsed.write(phrase)
-
     def WritePhrase(self, values_phrase):
         phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(values_phrase[0],
                                                             values_phrase[1],
@@ -208,36 +199,51 @@ class VCFParser():
                                                             values_phrase[5],
                                                             values_phrase[6],
                                                             values_phrase[7])
-        # TODO: Este sistema funciona?
+        
         if self.isDebugMode: print("Phrase to be writed: ", phrase)
         self.VCFParsed.write(phrase)
+    
+    def FindValidVariantLength(self):
 
-    def WriteInternalINV(self):
-        pos_END = None
-        pos_END = self.curr_Info.get("END")
-
-        if pos_END:
-            pos_END = int(pos_END) - 1
-            # TODO: Si cualquier pos > lenRef, se interpreta la inversa
-            self.phrase_Len = pos_END - self.curr_Pos
-            self.phrase_Edit = self.meta_ReferenceValues.get(self.curr_Chrom).get("ID")
-            self.phrase_PosEdit = self.ReferenceIndexTransform(pos_END)
-            self.phrase_LenEdit = self.phrase_Len
+        if self.curr_Info.has_key("END"):
+            # END is 1-based, tecnically this return should be (END - 1) - POS + 1
+            return self.curr_Info.get("END")[self.curr_AltIndex] - self.curr_Pos
+        elif self.curr_Info.has_key("SVLEN"):
+            return self.curr_Info.get("SVLEN")[self.curr_AltIndex] 
         else:
-            print("(!!) ERROR|INV: Se ha encontrado una inversion sin campo END, se descartará el edit.")
-            return
-
-        self.WritePhrase()
-
-    def WriteDeletion(self):
-        pos_END = int(self.curr_Info.get("END")) - 1 # Correction for 0 start
-
-        self.phrase_Len = pos_END - self.phrase_Pos + 1 # I know +-1 is unnecesary, Its just for theorical coherence
+            # TODO: Handle Error
+            print("Oh no, error FindValidVariantLength")
+            exit(1)
+        
+    def GenerateDeletionPhraseCache(self):
+        edit_length = self.FindValidVariantLength() # If it doesnt work, the exception will be thrown in this function
+        self.phrase_Len = edit_length
         self.phrase_Edit = ""
         self.phrase_PosEdit = 0
         self.phrase_LenEdit = 0
 
-        self.WritePhrase() # Done
+        self.AddToPhraseCache() # Done
+
+    def GenerateInversionPhraseCache(self):
+        edit_length = self.FindValidVariantLength() # If it doesnt work, the exception will be thrown in this function
+        self.phrase_Len = edit_length
+        self.phrase_Edit = self.meta_ReferenceValues.get(self.curr_Chrom).get("ID")
+        self.phrase_PosEdit = self.ReferenceIndexTransform(self.curr_Pos + edit_length)
+        self.phrase_LenEdit = self.phrase_Len
+
+        self.AddToPhraseCache() # Done
+
+    def GenerateDuplicationPhraseCache(self):
+        edit_length = self.FindValidVariantLength() # If it doesnt work, the exception will be thrown in this function
+        n_copy = int(self.curr_Alt[3:-1])
+        
+        self.phrase_Len = 0
+        self.phrase_Edit = self.meta_ReferenceValues.get(self.curr_Chrom).get("ID")
+        self.phrase_PosEdit = self.curr_Pos
+        self.phrase_LenEdit = edit_length
+
+        list_tmp_phrase = [self.CreateCustomPhrase() for _ in range(n_copy)]
+        self.CustomAddToPhraseCache(list_tmp_phrase)
 
     def AddToPhraseCache(self):
         tmp_phrase = [-1, # self.phrase_INDV to complete
@@ -248,26 +254,48 @@ class VCFParser():
                     self.phrase_Edit,
                     self.phrase_PosEdit,
                     self.phrase_LenEdit]
+        self.CustomAddToPhraseCache(tmp_phrase)
+
+    def CustomAddToPhraseCache(self, tmp_phrase):
         self.phrase_Cache.append(tmp_phrase)
+    
+    def CreateCustomPhrase(self, Chrom = None, Pos = None, Len = None,
+                            Edit = None, PosEdit = None, LenEdit = None):
+        tmp_phrase = [-1, # self.phrase_INDV to complete
+                    Chrom if Chrom else self.phrase_Chrom,
+                    -1, # self.phrase_Alele to complete
+                    Pos if Pos else self.phrase_Pos,
+                    Len if Len else self.phrase_Len,
+                    Edit if Edit else self.phrase_Edit,
+                    PosEdit if PosEdit else self.phrase_PosEdit,
+                    LenEdit if LenEdit else self.phrase_LenEdit]
+        return tmp_phrase
 
     def ProcessVariants(self):
-        """
-        Remains:
-                self.phrase_INDV = "X"
-                self.phrase_Alele = 0
-                self.phrase_Edit = "X"
-                self.phrase_PosEdit = 0
-                self.phrase_LenEdit = 0
-        """
+
         for alt in self.curr_AltList:
+            self.curr_Alt = alt
             if re.fullmatch(self.p_nucleotid_only, alt): # If its an explicit edit
                 self.phrase_PosEdit = 0
                 self.phrase_LenEdit = 0
                 self.phrase_Edit = alt
 
                 self.AddToPhraseCache() # Done
+            elif self.curr_Info.contains_key("SVTYPE"): # If its an external reference edit, we should check the SVTYPE
+                self.curr_SVTYPE = self.curr_Info.get("SVTYPE")
+
+                if self.curr_SVTYPE == "DEL" or alt == "<CN0>":
+                    self.GenerateDeletionPhraseCache()
+                    
+                elif self.curr_SVTYPE == "INV" and alt == "<INV>":
+                    self.GenerateInversionPhraseCache()
+
+                elif self.curr_SVTYPE == "DUP" and re.fullmatch(self.p_cnv_record, alt):
+                    self.GenerateDuplicationPhraseCache()
+
             else:
                 print("Jaja perate")
+                exit(1)
     
     def CleanUpData(self):
         self.phrase_Cache = []
@@ -311,61 +339,14 @@ class VCFParser():
                     
                     if self.curr_AleleList[j] == 0: # If there's no change, we continue
                         continue
-
-                    tmp_values_phrase = self.phrase_Cache[self.curr_AleleList[j] - 1]
+                    
+                    self.curr_AltIndex = self.curr_AleleList[j] - 1
+                    tmp_values_phrase = self.phrase_Cache[self.curr_AltIndex]
                     tmp_values_phrase[0] = self.phrase_INDV
                     tmp_values_phrase[2] = j
 
                     self.WritePhrase(tmp_values_phrase)
 
-                    # if re.fullmatch(self.p_nucleotid_only, self.phrase_Edit): # If its an explicit edit
-                    #     self.phrase_PosEdit = 0
-                    #     self.phrase_LenEdit = 0
-
-                    #     self.WritePhrase() # Done
-                    #     continue
-
-                    # elif self.curr_Info.contains_key("SVTYPE"): # If its an external reference edit, we should check the SVTYPE
-                    #     # TODO: Chequear si es necesario hacer una variable de clase
-                    #     self.curr_SVTYPE = self.curr_Info.get("SVTYPE")
-                    #     bool_HasEND = self.curr
-
-                    #     # We need to check what kind if SVTYPE is
-                    #         # No estoy segura de (self.curr_SVTYPE == "DEL" and self.phrase_Edit == "<DEL>")
-                    #     if (self.phrase_Edit == "<DEL>" or self.phrase_Edit == "<CN0>"):
-                    #         self.WriteDeletion()
-                    #         continue
-                        
-                    #     # TODO: No estoy segura de si esto es cierto. VERIFICAR
-                    #     # https://github.com/vcflib/vcflib/blob/master/src/Variant.cpp 359
-                    #     elif (self.curr_SVTYPE == "INS"):
-                    #         # TODO: Las inserciones e inversiones se ven aqui
-                    #         # (!) Si X != REF => Interpretar dos edits
-                    #         if re.match(self.p_bndCase1, self.phrase_Edit):
-                    #             pass
-                    #         elif re.match(self.p_bndCase2, self.phrase_Edit):
-                    #             pass
-                    #         elif re.match(self.p_bndCase3, self.phrase_Edit):
-                    #             pass
-                    #         elif re.match(self.p_bndCase4, self.phrase_Edit):
-                    #             pass
-
-                    #     elif (self.curr_SVTYPE == "INV"):
-                    #         assert self.phrase_Edit == "<INV>"
-                    #         self.WriteInternalINV()
-                    #         continue
-
-                    #     elif (self.curr_SVTYPE == "DUP"):
-                    #         # TODO: Handle
-                    #         pass
-
-                    #     elif (self.curr_SVTYPE == "CNV"):
-                    #         # TODO: Handle
-                    #         pass
-
-                    # else:
-                    #     # TODO: Aqui caen todos los casos no manejados, crear un reporte de no soportados
-                    #     pass
             raw_record = self.VCF.readline()
 
     def StartParsing(self):
@@ -378,7 +359,3 @@ class VCFParser():
             self.ProcessMETA()    
             # Interpretate edits
             self.ProcessRECORDS()        
-
-
-
-
