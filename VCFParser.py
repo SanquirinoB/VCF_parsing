@@ -190,18 +190,22 @@ class VCFParser():
         start, end = match_SVTYPE.span()
         return match_SVTYPE.string[start + 7 : end]
 
-    def WritePhrase(self, values_phrase):
-        phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(values_phrase[0],
-                                                            values_phrase[1],
-                                                            values_phrase[2],
-                                                            values_phrase[3],
-                                                            values_phrase[4],
-                                                            values_phrase[5],
-                                                            values_phrase[6],
-                                                            values_phrase[7])
-        
-        if self.isDebugMode: print("Phrase to be writed: ", phrase)
-        self.VCFParsed.write(phrase)
+    def WritePhrase(self, list_values_phrase):
+        if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
+
+        for values_phrase in list_values_phrase:
+            phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(values_phrase[0],
+                                                                values_phrase[1],
+                                                                values_phrase[2],
+                                                                values_phrase[3],
+                                                                values_phrase[4],
+                                                                values_phrase[5],
+                                                                values_phrase[6],
+                                                                values_phrase[7])
+            phrase = phrase.encode("utf-8")
+            
+            if self.isDebugMode: print("Phrase to be writed: ", phrase)
+            self.VCFParsed.write(phrase)
     
     def FindValidVariantLength(self):
 
@@ -257,7 +261,7 @@ class VCFParser():
         self.CustomAddToPhraseCache(tmp_phrase)
 
     def CustomAddToPhraseCache(self, tmp_phrase):
-        self.phrase_Cache.append(tmp_phrase)
+        self.phrase_Cache.append([tmp_phrase])
     
     def CreateCustomPhrase(self, Chrom = None, Pos = None, Len = None,
                             Edit = None, PosEdit = None, LenEdit = None):
@@ -340,10 +344,13 @@ class VCFParser():
                     if self.curr_AleleList[j] == 0: # If there's no change, we continue
                         continue
                     
+
                     self.curr_AltIndex = self.curr_AleleList[j] - 1
                     tmp_values_phrase = self.phrase_Cache[self.curr_AltIndex]
-                    tmp_values_phrase[0] = self.phrase_INDV
-                    tmp_values_phrase[2] = j
+
+                    for values_phrase in tmp_values_phrase:
+                        values_phrase[0] = self.phrase_INDV
+                        values_phrase[2] = j
 
                     self.WritePhrase(tmp_values_phrase)
 
@@ -351,7 +358,7 @@ class VCFParser():
 
     def StartParsing(self):
 
-        with open(self.path_file, 'r') as aux_VCF, open(self.path_fileParsed, 'w') as aux_VCFParsed:
+        with open(self.path_file, "r", "utf-8") as aux_VCF, open(self.path_fileParsed, "wb", "utf-8") as aux_VCFParsed:
             
             self.VCF = aux_VCF
             self.VCFParsed = aux_VCFParsed
