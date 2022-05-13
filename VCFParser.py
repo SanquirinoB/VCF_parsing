@@ -358,7 +358,7 @@ class VCFParser():
 
     def StartParsing(self):
 
-        with open(self.path_file, "r", "utf-8") as aux_VCF, open(self.path_fileParsed, "wb", "utf-8") as aux_VCFParsed:
+        with open(self.path_file, mode="r", encoding="UTF-8") as aux_VCF, open(self.path_fileParsed, mode="wb", encoding="UTF-8") as aux_VCFParsed:
             
             self.VCF = aux_VCF
             self.VCFParsed = aux_VCFParsed
