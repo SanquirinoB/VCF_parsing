@@ -202,9 +202,10 @@ class VCFParser():
                                                                 values_phrase[5],
                                                                 values_phrase[6],
                                                                 values_phrase[7])
-            phrase = phrase.encode("utf-8")
             
             if self.isDebugMode: print("Phrase to be writed: ", phrase)
+
+            phrase = phrase.encode("UTF-8")
             self.VCFParsed.write(phrase)
     
     def FindValidVariantLength(self):
@@ -358,7 +359,7 @@ class VCFParser():
 
     def StartParsing(self):
 
-        with open(self.path_file, mode="r", encoding="UTF-8") as aux_VCF, open(self.path_fileParsed, mode="wb", encoding="UTF-8") as aux_VCFParsed:
+        with open(self.path_file, mode="r", encoding="UTF-8") as aux_VCF, open(self.path_fileParsed, mode="wb") as aux_VCFParsed:
             
             self.VCF = aux_VCF
             self.VCFParsed = aux_VCFParsed
