@@ -72,10 +72,9 @@ class VCFParser():
 
     def CalculateInvertedReference(self):
         # TODO: Recordar generar un reporte del META con el tema de la REF inv y meta_ReferenceValues
-        len_reference = 0
         for ID in self.meta_ReferenceValues.keys():
             if ID:
-                len_reference += int(self.meta_ReferenceValues.get(ID).get("length"))    
+                self.Lenght_Reference += int(self.meta_ReferenceValues.get(ID).get("length"))    
             else:
                 exit(1)   
 
