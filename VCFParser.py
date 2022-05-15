@@ -145,8 +145,11 @@ class VCFParser():
         for infoPair in list_INFO:
             key, value = infoPair.split("=")
 
-            if key == "END" or key == "SVLEN":
+            if key == "END":
+                value = [int(x) - 1 for x in value.split(",")]
+            elif key == "SVLEN":
                 value = [int(x) for x in value.split(",")]
+
 
             dict_INFO[key] = value
 
@@ -158,7 +161,7 @@ class VCFParser():
         This information is needed for global record processing
         """
         self.curr_Chrom = record[0]
-        self.curr_Pos = int(record[1])
+        self.curr_Pos = int(record[1]) - 1
         self.curr_ID = record[2]
         self.curr_REF = record[3]
         self.curr_AltList = record[4].split(',')
