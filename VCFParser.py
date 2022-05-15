@@ -102,8 +102,8 @@ class VCFParser():
                 dict_aux["internalID"] = self.counter_contig # Set ID to a shorter internal value as new ID
                 self.counter_contig += 1
 
-                self.meta_ReferenceValues[ID] = dict_aux # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
-            
+                self.meta_ReferenceValues[ID] = dict_aux.copy() # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
+                dict_aux.clear()
 
             # TODO: The rest of the lines
             line = self.VCF.readline()[:-1]
