@@ -261,10 +261,10 @@ class VCFParser():
                     self.phrase_Edit,
                     self.phrase_PosEdit,
                     self.phrase_LenEdit]
-        self.CustomAddToPhraseCache(tmp_phrase)
+        self.CustomAddToPhraseCache([tmp_phrase])
 
     def CustomAddToPhraseCache(self, tmp_phrase):
-        self.phrase_Cache.append([tmp_phrase])
+        self.phrase_Cache.append(tmp_phrase)
     
     def CreateCustomPhrase(self, Chrom = None, Pos = None, Len = None,
                             Edit = None, PosEdit = None, LenEdit = None):
