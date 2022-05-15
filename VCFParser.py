@@ -68,7 +68,7 @@ class VCFParser():
         self.curr_SVTYPE = "X"
 
     def ReferenceIndexTransform(self, index):
-        return 2 * self.Lenght_Reference - index - 1
+        return (2 * self.Lenght_Reference) - index - 1
 
     def CalculateInvertedReference(self):
         # TODO: Recordar generar un reporte del META con el tema de la REF inv y meta_ReferenceValues
@@ -104,7 +104,6 @@ class VCFParser():
 
                 self.meta_ReferenceValues[ID] = dict_aux # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
             
-            if self.isDebugMode: print(self.meta_ReferenceValues)
 
             # TODO: The rest of the lines
             line = self.VCF.readline()[:-1]
@@ -116,12 +115,17 @@ class VCFParser():
         for i in range(self.n_samples):
             self.ID_samples[i] = tmp_ID_samples[i]
         
-        if self.isDebugMode: 
-            print("Curr n_samples: ", self.n_samples)
-            print("Curr IDs: ", self.ID_samples)
-            print("Destination path: ", self.path_fileParsed)
-
         self.CalculateInvertedReference()
+
+        if self.isDebugMode: 
+            print("---- RESUME META ----")
+            print("\tCurr n_samples:", self.n_samples)
+            print("\tCurr IDs:", self.ID_samples)
+            print("\tDestination path:", self.path_fileParsed)
+            print("\tMeta reference values:", self.meta_ReferenceValues)
+            print("\tReference length:", self.Lenght_Reference)
+        
+
 
     def ProcessFORMAT(self, raw_FORMAT):
         """
