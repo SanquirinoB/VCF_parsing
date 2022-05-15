@@ -96,7 +96,14 @@ class VCFParser():
 
                 for x in line[10:-1].split(","): # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"  
                     pair = x.split("=")
+
+                    if pair[0] == "length": # Necessary for invertion calculus
+                        dict_aux["relPosRef"] = self.Lenght_Reference
+                        self.Lenght_Reference += int(pair[1])
+                        continue
+
                     dict_aux[pair[0]] = pair[1]
+
 
                 ID = dict_aux.get("ID") # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
                 dict_aux["internalID"] = self.counter_contig # Set ID to a shorter internal value as new ID
@@ -235,10 +242,12 @@ class VCFParser():
         self.AddToPhraseCache() # Done
 
     def GenerateInversionPhraseCache(self):
+        curr_Ref_data = self.meta_ReferenceValues.get(self.curr_Chrom)
+
         edit_length = self.FindValidVariantLength() # If it doesnt work, the exception will be thrown in this function
         self.phrase_Len = edit_length
-        self.phrase_Edit = self.meta_ReferenceValues.get(self.curr_Chrom).get("ID")
-        self.phrase_PosEdit = self.ReferenceIndexTransform(self.curr_Pos + edit_length)
+        self.phrase_Edit = curr_Ref_data.get("ID")
+        self.phrase_PosEdit = self.ReferenceIndexTransform(curr_Ref_data.get("relPosRef") + self.curr_Pos + edit_length)
         self.phrase_LenEdit = self.phrase_Len
 
         self.AddToPhraseCache() # Done
