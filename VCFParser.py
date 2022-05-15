@@ -214,9 +214,9 @@ class VCFParser():
 
         if "END" in self.curr_Info.keys():
             # END is 1-based, tecnically this return should be (END - 1) - POS + 1
-            return self.curr_Info.get("END")[self.curr_AltIndex] - self.curr_Pos
+            return self.curr_Info.get("END")[self.curr_AltIndex - 1] - self.curr_Pos
         elif "SVLEN" in self.curr_Info.keys():
-            return self.curr_Info.get("SVLEN")[self.curr_AltIndex] 
+            return self.curr_Info.get("SVLEN")[self.curr_AltIndex - 1] 
         else:
             # TODO: Handle Error
             print("Oh no, error FindValidVariantLength")
