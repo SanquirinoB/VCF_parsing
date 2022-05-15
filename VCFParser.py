@@ -351,6 +351,8 @@ class VCFParser():
                     self.curr_AltIndex = self.curr_AleleList[j] - 1
                     tmp_values_phrase = self.phrase_Cache[self.curr_AltIndex]
 
+                    if self.isDebugMode: print("Phrases to be writed:", tmp_values_phrase)
+
                     for values_phrase in tmp_values_phrase:
                         values_phrase[0] = self.phrase_INDV
                         values_phrase[2] = j
