@@ -210,10 +210,10 @@ class VCFParser():
     
     def FindValidVariantLength(self):
 
-        if self.curr_Info.has_key("END"):
+        if "END" in self.curr_Info.keys():
             # END is 1-based, tecnically this return should be (END - 1) - POS + 1
             return self.curr_Info.get("END")[self.curr_AltIndex] - self.curr_Pos
-        elif self.curr_Info.has_key("SVLEN"):
+        elif "SVLEN" in self.curr_Info.keys():
             return self.curr_Info.get("SVLEN")[self.curr_AltIndex] 
         else:
             # TODO: Handle Error
@@ -286,7 +286,7 @@ class VCFParser():
                 self.phrase_Edit = alt
 
                 self.AddToPhraseCache() # Done
-            elif self.curr_Info.contains_key("SVTYPE"): # If its an external reference edit, we should check the SVTYPE
+            elif "SVTYPE" in self.curr_Info.keys(): # If its an external reference edit, we should check the SVTYPE
                 self.curr_SVTYPE = self.curr_Info.get("SVTYPE")
 
                 if self.curr_SVTYPE == "DEL" or alt == "<CN0>":
