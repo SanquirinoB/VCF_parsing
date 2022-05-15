@@ -186,6 +186,8 @@ class VCFParser():
 
         self.curr_AleleList = [int(x) if x != "." else self.MISS_AleleAlt for x in self.curr_AleleList]
 
+        if self.isDebugMode: print("CurrAleleList is:", self.curr_AleleList)
+
     def GetSVTYPE(self, match_SVTYPE):
         start, end = match_SVTYPE.span()
         return match_SVTYPE.string[start + 7 : end]
