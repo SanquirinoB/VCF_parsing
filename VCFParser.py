@@ -70,14 +70,6 @@ class VCFParser():
     def ReferenceIndexTransform(self, index):
         return (2 * self.Lenght_Reference) - index - 1
 
-    def CalculateInvertedReference(self):
-        # TODO: Recordar generar un reporte del META con el tema de la REF inv y meta_ReferenceValues
-        for ID in self.meta_ReferenceValues.keys():
-            if ID:
-                self.Lenght_Reference += int(self.meta_ReferenceValues.get(ID).get("length"))    
-            else:
-                exit(1)   
-
     def ProcessMETA(self):
         # The first line readed is the VCF Version
         # TODO: Querremos procesar esto? Quiza crear un assert de version
@@ -121,8 +113,6 @@ class VCFParser():
         self.ID_samples = {}
         for i in range(self.n_samples):
             self.ID_samples[i] = tmp_ID_samples[i]
-        
-        self.CalculateInvertedReference()
 
         if self.isDebugMode: 
             print("---- RESUME META ----")
