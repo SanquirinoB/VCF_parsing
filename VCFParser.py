@@ -17,21 +17,16 @@ class VCFParser():
         self.path_fileParsed = VCF_path[:-4] + "_Parsed.txt"
         self.VCFParsed = None
 
+        self.path_fileTmpData = VCF_path[:-4] + "_TMP.rlz"
+        self.TMPRLZ = None
+
         # Preference settings
         self.UnphasedAsPhased = True
         self.DiscardNotPASSRecords = True
 
         # Helper parameters
-        self.p_metainfo_line = re.compile(r"^##")
-        self.p_record_line = re.compile(r"^#")
         self.p_nucleotid_only = re.compile(r"[ACTGN]+")
         self.p_cnv_record = re.compile(r"<CN[1-9][0-9]*>") # => <CNi> where i >= 1
-        self.p_SVTYPE = re.compile(r"SVTYPE=[^;]+")
-            # Case1 like AAA[<ctg>:2[, Case2 like AAA]<ctg>:2], Case3 like [<ctg>:2[AAA and Case4 like ]<ctg>:2]AAA
-        # self.p_bndCase1 = re.compile(r"[ACTGN]+\[<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\[")
-        # self.p_bndCase2 = re.compile(r"[ACTGN]+\]<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\]")
-        # self.p_bndCase3 = re.compile(r"\[<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\[[ACTGN]+")
-        # self.p_bndCase4 = re.compile(r"\]<[0-9A-Za-z!#$%&+./:;?@^_|~-][0-9A-Za-z!#$%&*+./:;=?@^_|~-]*>:[0-9]+\][ACTGN]+")
 
         # Phrase base structure
             # Everything related to indexes will be fixed for start at 0
@@ -190,10 +185,6 @@ class VCFParser():
         self.curr_AleleList = [int(x) if x != "." else self.MISS_AleleAlt for x in self.curr_AleleList]
 
         if self.isDebugMode: print("CurrAleleList is:", self.curr_AleleList)
-
-    def GetSVTYPE(self, match_SVTYPE):
-        start, end = match_SVTYPE.span()
-        return match_SVTYPE.string[start + 7 : end]
 
     def WritePhrase(self, list_values_phrase):
         if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
@@ -366,6 +357,12 @@ class VCFParser():
 
             raw_record = self.VCF.readline()
 
+    def GenerateRLZResume(self):
+        # We need to report
+        # Number of samples
+        # number of phrases
+        pass
+
     def StartParsing(self):
 
         with open(self.path_file, mode="r") as aux_VCF, open(self.path_fileParsed, mode="wb") as aux_VCFParsed:
@@ -375,4 +372,8 @@ class VCFParser():
             # Collect VCF metainformation
             self.ProcessMETA()    
             # Interpretate edits
-            self.ProcessRECORDS()        
+            self.ProcessRECORDS()     
+
+        # with open(self.path_fileTmpData, mode = "wb") as aux_TMPRLZ:
+        #     self.TMPRLZ = aux_TMPRLZ
+        #     self.GenerateRLZResume()  
