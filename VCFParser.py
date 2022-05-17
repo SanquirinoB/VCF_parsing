@@ -14,7 +14,7 @@ class VCFParser():
         # TODO: Hacer configurable a gusto
         self.MISS_AleleAlt = 0
 
-        self.path_fileParsed = VCF_path[:-4] + "_Parsed.txt"
+        self.path_fileParsed = VCF_path[:-4] + "_Parsed.bin"
         self.VCFParsed = None
 
         self.path_fileTmpData = VCF_path[:-4] + "_TMP.rlz"
