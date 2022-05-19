@@ -141,7 +141,11 @@ class VCFParser():
         list_INFO = raw_INFO.split(";")
         dict_INFO = {}
         for infoPair in list_INFO:
-            key, value = infoPair.split("=")
+            try:
+                key, value = infoPair.split("=")
+            except:
+                print("PROCESS_INFO| Error: ", infoPair)
+                exit(1)
 
             if key == "END":
                 value = [int(x) - 1 for x in value.split(",")]
