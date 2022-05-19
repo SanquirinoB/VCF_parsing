@@ -4,24 +4,22 @@
 import re
 
 class VCFParser():
-    def __init__(self, VCF_path, debug):
+    def __init__(self, VCF_path_list, debug):
         # Debug
         self.isDebugMode = debug
         # Reference to the VCF to be parsed
-        self.path_file = VCF_path
+        self.path_file_list = VCF_path_list
         self.VCF = None
         self.MISSING = "."
+
         # TODO: Hacer configurable a gusto
         self.MISS_AleleAlt = 0
 
         self.valid_record = True
         self.n_droppedRecords = 0
 
-        self.path_fileParsed = VCF_path[:-4] + "_Parsed.bin"
         self.VCFParsed = None
 
-        self.path_fileTmpData = VCF_path[:-4] + "_TMP.rlz"
-        self.TMPRLZ = None
 
         # Preference settings
         self.UnphasedAsPhased = True
@@ -68,7 +66,7 @@ class VCFParser():
     def ReferenceIndexTransform(self, index):
         return (2 * self.Lenght_Reference) - index - 1
 
-    def ProcessMETA(self):
+    def ProcessMETA(self, keep_meta):
         # The first line readed is the VCF Version
         # TODO: Querremos procesar esto? Quiza crear un assert de version
         line = self.VCF.readline()[:-1]
@@ -76,31 +74,31 @@ class VCFParser():
 
         # The last line allowed will be just before header line
         while line[:2] == "##":
+            if keep_meta:
+                if line[:9] == "##contig=": # line = "##contig=<ID=GL000224.1,assembly=b37,length=179693>\n"
 
-            if line[:9] == "##contig=": # line = "##contig=<ID=GL000224.1,assembly=b37,length=179693>\n"
+                    if not ("length" in line): # This value is not mandatory, so just in case
+                        # TODO: Debemos recuperar el archivo de referencia y recuperar el largo
+                        # de los strings
+                        print("Oh no")
 
-                if not ("length" in line): # This value is not mandatory, so just in case
-                    # TODO: Debemos recuperar el archivo de referencia y recuperar el largo
-                    # de los strings
-                    print("Oh no")
+                    for x in line[10:-1].split(","): # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"  
+                        pair = x.split("=")
 
-                for x in line[10:-1].split(","): # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"  
-                    pair = x.split("=")
+                        if pair[0] == "length": # Necessary for invertion calculus
+                            dict_aux["relPosRef"] = self.Lenght_Reference
+                            self.Lenght_Reference += int(pair[1])
+                            continue
 
-                    if pair[0] == "length": # Necessary for invertion calculus
-                        dict_aux["relPosRef"] = self.Lenght_Reference
-                        self.Lenght_Reference += int(pair[1])
-                        continue
-
-                    dict_aux[pair[0]] = pair[1]
+                        dict_aux[pair[0]] = pair[1]
 
 
-                ID = dict_aux.get("ID") # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
-                dict_aux["internalID"] = self.counter_contig # Set ID to a shorter internal value as new ID
-                self.counter_contig += 1
+                    ID = dict_aux.get("ID") # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
+                    dict_aux["internalID"] = self.counter_contig # Set ID to a shorter internal value as new ID
+                    self.counter_contig += 1
 
-                self.meta_ReferenceValues[ID] = dict_aux.copy() # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
-                dict_aux.clear()
+                    self.meta_ReferenceValues[ID] = dict_aux.copy() # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
+                    dict_aux.clear()
 
             # TODO: The rest of the lines
             line = self.VCF.readline()[:-1]
@@ -112,13 +110,7 @@ class VCFParser():
         for i in range(self.n_samples):
             self.ID_samples[i] = tmp_ID_samples[i]
 
-        if self.isDebugMode: 
-            print("---- RESUME META ----")
-            print("\tCurr n_samples:", self.n_samples)
-            print("\tCurr IDs:", self.ID_samples)
-            print("\tDestination path:", self.path_fileParsed)
-            print("\tMeta reference values:", self.meta_ReferenceValues)
-            print("\tReference length:", self.Lenght_Reference)
+        
         
 
 
@@ -377,21 +369,36 @@ class VCFParser():
     
     def ReportEndProcess(self):
         print("Number of droped records:", self.n_droppedRecords)
+        if self.isDebugMode: 
+            print("---- RESUME META ----")
+            print("\tCurr n_samples:", self.n_samples)
+            print("\tCurr IDs:", self.ID_samples)
+            print("\tDestination path:", self.path_fileParsed)
+            print("\tMeta reference values:", self.meta_ReferenceValues)
+            print("\tReference length:", self.Lenght_Reference)
 
 
     def StartParsing(self):
+        is_first_meta = True
+        for path_file in self.path_file_list:
+            # TODO: Make own folder
+            path_fileParsed = path_file[:-4] + "_Parsed.bin"
+            with open(path_file, mode="r") as aux_VCF, open(path_fileParsed, mode="wb+") as aux_VCFParsed:
+                
+                # Save pointers
+                self.VCF = aux_VCF
+                self.VCFParsed = aux_VCFParsed
 
-        with open(self.path_file, mode="r") as aux_VCF, open(self.path_fileParsed, mode="wb") as aux_VCFParsed:
-            
-            self.VCF = aux_VCF
-            self.VCFParsed = aux_VCFParsed
-            # Collect VCF metainformation
-            self.ProcessMETA()    
-            # Interpretate edits
-            self.ProcessRECORDS()   
+                # Collect VCF metainformation
+                self.ProcessMETA(keep_meta=is_first_meta)    
+                is_first_meta = False
+
+                # Interpretate edits
+                self.ProcessRECORDS()   
 
         self.ReportEndProcess()  
 
         # with open(self.path_fileTmpData, mode = "wb") as aux_TMPRLZ:
         #     self.TMPRLZ = aux_TMPRLZ
         #     self.GenerateRLZResume()  
+
