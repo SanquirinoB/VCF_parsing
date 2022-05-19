@@ -142,7 +142,7 @@ class VCFParser():
         dict_INFO = {}
         key, value = "X", 0
         for infoPair in list_INFO:
-            
+
             if "=" in infoPair:
                 key, value = infoPair.split("=")
             else: # Is flag
@@ -195,7 +195,7 @@ class VCFParser():
         if self.isDebugMode: print("CurrAleleList is:", self.curr_AleleList)
 
     def WritePhrase(self, list_values_phrase):
-        if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
+        #if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
 
         for values_phrase in list_values_phrase:
             phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(values_phrase[0],
@@ -207,7 +207,7 @@ class VCFParser():
                                                                 values_phrase[6],
                                                                 values_phrase[7])
             
-            if self.isDebugMode: print("Phrase to be writed: ", phrase)
+            #if self.isDebugMode: print("Phrase to be writed: ", phrase)
 
             phrase = phrase.encode("utf-8")
             self.VCFParsed.write(phrase)
@@ -354,7 +354,7 @@ class VCFParser():
                         self.curr_AltIndex = self.curr_AleleList[j] - 1
                         tmp_values_phrase = self.phrase_Cache[self.curr_AltIndex]
 
-                        if self.isDebugMode: print("Phrases to be writed:", tmp_values_phrase)
+                        #if self.isDebugMode: print("Phrases to be writed:", tmp_values_phrase)
 
                         for values_phrase in tmp_values_phrase:
                             values_phrase[0] = self.phrase_INDV
