@@ -14,6 +14,9 @@ class VCFParser():
         # TODO: Hacer configurable a gusto
         self.MISS_AleleAlt = 0
 
+        self.valid_record = True
+        self.n_droppedRecords = 0
+
         self.path_fileParsed = VCF_path[:-4] + "_Parsed.bin"
         self.VCFParsed = None
 
@@ -297,8 +300,9 @@ class VCFParser():
                     self.GenerateDuplicationPhraseCache()
 
             else:
-                print("Jaja perate")
-                exit(1)
+                if self.isDebugMode: print("(!) Edit no canonico descartado.")
+                self.n_droppedRecords += 1
+                self.valid_record = False
     
     def CleanUpData(self):
         self.phrase_Cache = []
@@ -329,31 +333,34 @@ class VCFParser():
 
             self.ProcessVariants()
 
+            if self.valid_record:
             # Over each sample
-            for i in range(self.n_samples):
-                if self.isDebugMode: print("For sample ", self.ID_samples.get(i))
-                # Set internal id
-                self.phrase_INDV = i
+                for i in range(self.n_samples):
+                    if self.isDebugMode: print("For sample ", self.ID_samples.get(i))
+                    # Set internal id
+                    self.phrase_INDV = i
 
-                self.UpdateAlelesList(raw_AleleFullList[i])
+                    self.UpdateAlelesList(raw_AleleFullList[i])
 
-                for j in range(len(self.curr_AleleList)): # Over each alele
-                    if self.isDebugMode: print("For alele ", j, "with variant index", self.curr_AleleList[j] - 1)
-                    
-                    if self.curr_AleleList[j] == 0: # If there's no change, we continue
-                        continue
-                    
+                    for j in range(len(self.curr_AleleList)): # Over each alele
+                        if self.isDebugMode: print("For alele ", j, "with variant index", self.curr_AleleList[j] - 1)
+                        
+                        if self.curr_AleleList[j] == 0: # If there's no change, we continue
+                            continue
+                        
 
-                    self.curr_AltIndex = self.curr_AleleList[j] - 1
-                    tmp_values_phrase = self.phrase_Cache[self.curr_AltIndex]
+                        self.curr_AltIndex = self.curr_AleleList[j] - 1
+                        tmp_values_phrase = self.phrase_Cache[self.curr_AltIndex]
 
-                    if self.isDebugMode: print("Phrases to be writed:", tmp_values_phrase)
+                        if self.isDebugMode: print("Phrases to be writed:", tmp_values_phrase)
 
-                    for values_phrase in tmp_values_phrase:
-                        values_phrase[0] = self.phrase_INDV
-                        values_phrase[2] = j
+                        for values_phrase in tmp_values_phrase:
+                            values_phrase[0] = self.phrase_INDV
+                            values_phrase[2] = j
 
-                    self.WritePhrase(tmp_values_phrase)
+                        self.WritePhrase(tmp_values_phrase)
+            else:
+                self.valid_record = True
 
             raw_record = self.VCF.readline()
 
@@ -362,6 +369,10 @@ class VCFParser():
         # Number of samples
         # number of phrases
         pass
+    
+    def ReportEndProcess(self):
+        print("Number of droped records:", self.n_droppedRecords)
+
 
     def StartParsing(self):
 
@@ -372,7 +383,9 @@ class VCFParser():
             # Collect VCF metainformation
             self.ProcessMETA()    
             # Interpretate edits
-            self.ProcessRECORDS()     
+            self.ProcessRECORDS()   
+
+        self.ReportEndProcess()  
 
         # with open(self.path_fileTmpData, mode = "wb") as aux_TMPRLZ:
         #     self.TMPRLZ = aux_TMPRLZ
