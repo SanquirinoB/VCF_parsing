@@ -140,12 +140,13 @@ class VCFParser():
         if raw_INFO == self.MISSING: return
         list_INFO = raw_INFO.split(";")
         dict_INFO = {}
+        key, value = "X", 0
         for infoPair in list_INFO:
-            try:
+            
+            if "=" in infoPair:
                 key, value = infoPair.split("=")
-            except:
-                print("PROCESS_INFO| Error: ", infoPair)
-                exit(1)
+            else: # Is flag
+                key, value = infoPair, "True"
 
             if key == "END":
                 value = [int(x) - 1 for x in value.split(",")]
