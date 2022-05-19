@@ -348,7 +348,7 @@ class VCFParser():
                     self.UpdateAlelesList(raw_AleleFullList[i])
 
                     for j in range(len(self.curr_AleleList)): # Over each alele
-                        if self.isDebugMode: print("For alele ", j, "with variant index", self.curr_AleleList[j] - 1)
+                        #if self.isDebugMode: print("For alele ", j, "with variant index", self.curr_AleleList[j] - 1)
                         
                         if self.curr_AleleList[j] == 0: # If there's no change, we continue
                             continue
