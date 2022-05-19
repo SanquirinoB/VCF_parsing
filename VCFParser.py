@@ -308,6 +308,8 @@ class VCFParser():
                 if self.isDebugMode: print("(!) Edit no canonico descartado.")
                 self.n_droppedRecords += 1
                 self.valid_record = False
+
+        if self.isDebugMode: print("Edits obtained: ", len(self.phrase_Cache), "/nPhrases: ", self.phrase_Cache)
     
     def CleanUpData(self):
         self.phrase_Cache = []
