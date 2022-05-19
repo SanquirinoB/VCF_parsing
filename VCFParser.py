@@ -316,9 +316,6 @@ class VCFParser():
 
             self.CleanUpData()
 
-            if self.isDebugMode: print("Current record: ", record)
-
-
             # Filter check
             if (self.DiscardNotPASSRecords and record[5] != "PASS"):
                 print("(!) WARNING|FILTER: Se ha descartado un registro por no cumplir con FILTER=PASS. Edit nro {}".format(-1))
