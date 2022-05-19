@@ -301,7 +301,7 @@ class VCFParser():
                 elif self.curr_SVTYPE == "INV" and alt == "<INV>":
                     self.GenerateInversionPhraseCache()
 
-                elif self.curr_SVTYPE == "DUP" and re.fullmatch(self.p_cnv_record, alt):
+                elif self.curr_SVTYPE == "CNV" and re.fullmatch(self.p_cnv_record, alt):
                     self.GenerateDuplicationPhraseCache()
 
             else:
