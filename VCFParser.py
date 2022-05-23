@@ -28,6 +28,7 @@ class VCFParser():
         # Helper parameters
         self.p_nucleotid_only = re.compile(r"[ACTGN]+")
         self.p_cnv_record = re.compile(r"<CN[1-9][0-9]*>") # => <CNi> where i >= 1
+        self.valid_record = True
 
         # Phrase base structure
             # Everything related to indexes will be fixed for start at 0
@@ -297,7 +298,7 @@ class VCFParser():
                 self.n_droppedRecords += 1
                 self.valid_record = False
 
-        if self.isDebugMode: print("Edits obtained: ", len(self.phrase_Cache), "/nPhrases: ", self.phrase_Cache)
+        if self.isDebugMode: print("Edits obtained: ", len(self.phrase_Cache), "\nPhrases: ", self.phrase_Cache)
     
     def CleanUpData(self):
         self.phrase_Cache = []
@@ -390,7 +391,7 @@ class VCFParser():
             file_name = path_file.split("/")[-1][:-4] # Get name and remove .vcf
 
             path_fileParsed = os.path.join(parsing_folder, file_name + ".tmprlz")
-            
+
             with open(path_file, mode="r") as aux_VCF, open(path_fileParsed, mode="wb+") as aux_VCFParsed:
 
                 # Save pointers
