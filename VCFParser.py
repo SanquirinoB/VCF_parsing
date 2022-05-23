@@ -369,7 +369,6 @@ class VCFParser():
             print("---- RESUME META ----")
             print("\tCurr n_samples:", self.n_samples)
             print("\tCurr IDs:", self.ID_samples)
-            print("\tDestination path:", self.path_fileParsed)
             print("\tMeta reference values:", self.meta_ReferenceValues)
             print("\tReference length:", self.Lenght_Reference)
 
