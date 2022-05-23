@@ -2,14 +2,15 @@ from VCFParser import VCFParser
 import sys
 
 if __name__ == "__main__":
-    vcf_path = sys.argv[1]
-    # argv = [codigo, param1, param2, ...]
+    # argv = [codigo, destino, -n, paths, ... , param2, ...]
 
-    if sys.argv[1] == "-n":
+    if sys.argv[2] == "-n":
         # TODO: Ahora asumimos que todo correcto no mas
-        parser = VCFParser(sys.argv[- int(sys.argv[2]):], True)
+        # (self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value = 0, LeaveUnphasedAsPhased = True, 
+        # DiscardNotPASSRecords = True, debug = False):
+        parser = VCFParser(sys.argv[1], sys.argv[- int(sys.argv[2]):], 0, True, True, True)
     else:
-        # TODO
+        # TODO usar https://docs.python.org/3/library/argparse.html
         exp = """
             Usage: parsing_process.py [OPTIONS]... [FILE]...\n
             For each VCF FILE, we parse given by the OPTIONS defined.\n
@@ -19,8 +20,6 @@ if __name__ == "__main__":
             \t-f=[STR]... :\n
             """
         print(exp)
-
-
-    parser = VCFParser(vcf_path, True)
+        exit(1)
 
     parser.StartParsing()

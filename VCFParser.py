@@ -2,28 +2,28 @@
 # -*- coding: utf-8 -*-
 
 import re
+import os
 
 class VCFParser():
-    def __init__(self, VCF_path_list, debug):
+    def __init__(self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value = 0, LeaveUnphasedAsPhased = True, 
+                DiscardNotPASSRecords = True, debug = False):
         # Debug
         self.isDebugMode = debug
         # Reference to the VCF to be parsed
+        self.path_destination = Destination_folder
         self.path_file_list = VCF_path_list
         self.VCF = None
         self.MISSING = "."
 
-        # TODO: Hacer configurable a gusto
-        self.MISS_AleleAlt = 0
+        self.MISS_AleleAlt = MISS_AleleAlt_Value
 
-        self.valid_record = True
         self.n_droppedRecords = 0
 
         self.VCFParsed = None
 
-
         # Preference settings
-        self.UnphasedAsPhased = True
-        self.DiscardNotPASSRecords = True
+        self.UnphasedAsPhased = LeaveUnphasedAsPhased
+        self.DiscardNotPASSRecords = DiscardNotPASSRecords
 
         # Helper parameters
         self.p_nucleotid_only = re.compile(r"[ACTGN]+")
@@ -34,7 +34,7 @@ class VCFParser():
             # for the first element
         self.phrase_INDV = "X"
         self.phrase_Chrom = 0
-        self.phrase_Alele = 0
+        # self.phrase_Alele = 0
         self.phrase_Pos = 0
         self.phrase_Len = 0
         self.phrase_Edit = "X"
@@ -53,11 +53,11 @@ class VCFParser():
         # Variables for VCF record processing
         self.curr_Chrom = "X"
         self.curr_Pos = 0
-        self.curr_ID = "X"
+        #self.curr_ID = "X"
         self.curr_REF = "X"
         self.curr_AltIndex = 0
-        self.curr_Qual = "X"
-        self.curr_Filter = "X"
+        #self.curr_Qual = "X"
+        #self.curr_Filter = "X"
         self.curr_Info = {}
         self.curr_Format = {}
         self.curr_AleleList = []
@@ -66,7 +66,7 @@ class VCFParser():
     def ReferenceIndexTransform(self, index):
         return (2 * self.Lenght_Reference) - index - 1
 
-    def ProcessMETA(self, keep_meta):
+    def ProcessMETA(self, keep_meta = True):
         # The first line readed is the VCF Version
         # TODO: Querremos procesar esto? Quiza crear un assert de version
         line = self.VCF.readline()[:-1]
@@ -82,7 +82,7 @@ class VCFParser():
                         # de los strings
                         print("Oh no")
 
-                    for x in line[10:-1].split(","): # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"  
+                    for x in line[10:-2].split(","): # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"  
                         pair = x.split("=")
 
                         if pair[0] == "length": # Necessary for invertion calculus
@@ -109,8 +109,6 @@ class VCFParser():
         self.ID_samples = {}
         for i in range(self.n_samples):
             self.ID_samples[i] = tmp_ID_samples[i]
-
-        
         
 
 
@@ -157,13 +155,11 @@ class VCFParser():
         """
         self.curr_Chrom = record[0]
         self.curr_Pos = int(record[1]) - 1
-        self.curr_ID = record[2]
         self.curr_REF = record[3]
         self.curr_AltList = record[4].split(',')
+
         if self.isDebugMode: print("Current AltList: ", self.curr_AltList)
 
-        self.curr_Qual = record[5]
-        self.curr_Filter = record[6]
         self.ProcessINFO(record[7])
         self.ProcessFORMAT(record[8])
 
@@ -212,8 +208,7 @@ class VCFParser():
         elif "SVLEN" in self.curr_Info.keys():
             return self.curr_Info.get("SVLEN")[self.curr_AltIndex - 1] 
         else:
-            # TODO: Handle Error
-            print("Oh no, error FindValidVariantLength")
+            print("[FindValidVariantLength] ERROR: Valid end value (END/SVLEN) not found. Variant can't be processed.")
             exit(1)
         
     def GenerateDeletionPhraseCache(self):
@@ -379,12 +374,25 @@ class VCFParser():
 
 
     def StartParsing(self):
+        # SUPUESTOS: Recibimos VCF separados por cromosoma
+
+        tmp_folder = os.path.join(self.path_destination, "Tmp")
+        parsing_folder = os.path.join(tmp_folder, "Parsing")
+        metadata_folder = os.path.join(tmp_folder, "MetaData")
+
+        os.mkdir(tmp_folder)
+        os.mkdir(parsing_folder)
+        os.mkdir(metadata_folder)
+
         is_first_meta = True
         for path_file in self.path_file_list:
-            # TODO: Make own folder
-            path_fileParsed = path_file[:-4] + "_Parsed.bin"
+
+            file_name = path_file.split("/")[-1][:-4] # Get name and remove .vcf
+
+            path_fileParsed = os.path.join(parsing_folder, file_name + ".tmprlz")
+            
             with open(path_file, mode="r") as aux_VCF, open(path_fileParsed, mode="wb+") as aux_VCFParsed:
-                
+
                 # Save pointers
                 self.VCF = aux_VCF
                 self.VCFParsed = aux_VCFParsed
