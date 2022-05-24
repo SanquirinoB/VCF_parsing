@@ -367,7 +367,7 @@ class VCFParser():
     def GenerateRLZResume(self):
         # We need to report
         aux_line = "{}".format(self.n_phrases)
-        self.TMPRLZ.write(aux_line)
+        self.TMPRLZ.write(aux_line.encode("utf-8"))
 
     
     def ReportEndProcess(self):
