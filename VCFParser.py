@@ -389,15 +389,15 @@ class VCFParser():
 
         if os.path.isdir(tmp_folder):
             shutil.rmtree(tmp_folder)
-            os.mkdir(tmp_folder)
-            
+        os.mkdir(tmp_folder)
+
         if os.path.isdir(parsing_folder):
             shutil.rmtree(parsing_folder)
-            os.mkdir(parsing_folder)
+        os.mkdir(parsing_folder)
 
         if os.path.isdir(metadata_folder):
             shutil.rmtree(metadata_folder)
-            os.mkdir(metadata_folder)
+        os.mkdir(metadata_folder)
 
         is_first_meta = True
         for path_file in self.path_file_list:
