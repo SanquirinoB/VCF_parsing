@@ -3,6 +3,7 @@
 
 import re
 import os
+import shutil
 
 class VCFParser():
     def __init__(self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value = 0, LeaveUnphasedAsPhased = True, 
@@ -49,7 +50,8 @@ class VCFParser():
         self.counter_contig = 0
         self.ID_samples = {}
         self.n_samples = 0
-        self.Lenght_Reference = 0
+        self.Length_Reference = 0
+        self.n_phrases = 0
 
         # Variables for VCF record processing
         self.curr_Chrom = "X"
@@ -64,8 +66,12 @@ class VCFParser():
         self.curr_AleleList = []
         self.curr_SVTYPE = "X"
 
+        self.alphabet_replace = [["A", "0"], ["B", "1"], ["C", "2"], ["D", "3"]]
+        #{"0": 0b0000, "1": 0b0001, "2": 0b0010, "3": 0b0011, "4": 0b0100, "5": 0b0101, "6": 0b0110, "7": 0b0111, 
+        #                "8": 0b1000, "9": 0b1001, "A" : 0b1010, "C": 0b1011, "T": 0b1100, "G": 0b1101, "X": }
+
     def ReferenceIndexTransform(self, index):
-        return (2 * self.Lenght_Reference) - index - 1
+        return (2 * self.Length_Reference) - index - 1
 
     def ProcessMETA(self, keep_meta = True):
         # The first line readed is the VCF Version
@@ -87,8 +93,8 @@ class VCFParser():
                         pair = x.split("=")
 
                         if pair[0] == "length": # Necessary for invertion calculus
-                            dict_aux["relPosRef"] = self.Lenght_Reference
-                            self.Lenght_Reference += int(pair[1])
+                            dict_aux["relPosRef"] = self.Length_Reference
+                            self.Length_Reference += int(pair[1])
                             continue
 
                         dict_aux[pair[0]] = pair[1]
@@ -185,9 +191,9 @@ class VCFParser():
 
     def WritePhrase(self, list_values_phrase):
         #if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
-
+        # TODO: Make a fixed size file
         for values_phrase in list_values_phrase:
-            phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(values_phrase[0],
+            phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\r\n".format(values_phrase[0],
                                                                 values_phrase[1],
                                                                 values_phrase[2],
                                                                 values_phrase[3],
@@ -200,6 +206,7 @@ class VCFParser():
 
             phrase = phrase.encode("utf-8")
             self.VCFParsed.write(phrase)
+            self.n_phrases += 1
     
     def FindValidVariantLength(self):
 
@@ -359,9 +366,9 @@ class VCFParser():
 
     def GenerateRLZResume(self):
         # We need to report
-        # Number of samples
-        # number of phrases
-        pass
+        aux_line = "{}".format(self.n_phrases)
+        self.TMPRLZ.write(aux_line)
+
     
     def ReportEndProcess(self):
         print("Number of droped records:", self.n_droppedRecords)
@@ -370,7 +377,7 @@ class VCFParser():
             print("\tCurr n_samples:", self.n_samples)
             print("\tCurr IDs:", self.ID_samples)
             print("\tMeta reference values:", self.meta_ReferenceValues)
-            print("\tReference length:", self.Lenght_Reference)
+            print("\tReference length:", self.Length_Reference)
 
 
     def StartParsing(self):
@@ -380,9 +387,17 @@ class VCFParser():
         parsing_folder = os.path.join(tmp_folder, "Parsing")
         metadata_folder = os.path.join(tmp_folder, "MetaData")
 
-        os.mkdir(tmp_folder)
-        os.mkdir(parsing_folder)
-        os.mkdir(metadata_folder)
+        if os.path.isdir(tmp_folder):
+            shutil.rmtree(tmp_folder)
+            os.mkdir(tmp_folder)
+            
+        if os.path.isdir(parsing_folder):
+            shutil.rmtree(parsing_folder)
+            os.mkdir(parsing_folder)
+
+        if os.path.isdir(metadata_folder):
+            shutil.rmtree(metadata_folder)
+            os.mkdir(metadata_folder)
 
         is_first_meta = True
         for path_file in self.path_file_list:
@@ -406,7 +421,8 @@ class VCFParser():
 
         self.ReportEndProcess()  
 
-        # with open(self.path_fileTmpData, mode = "wb") as aux_TMPRLZ:
-        #     self.TMPRLZ = aux_TMPRLZ
-        #     self.GenerateRLZResume()  
+        path_resume = os.path.join(metadata_folder, "Resume.metarlz")
+        with open(path_resume, mode = "wb") as aux_TMPRLZ:
+            self.TMPRLZ = aux_TMPRLZ
+            self.GenerateRLZResume()  
 
