@@ -69,8 +69,7 @@ class VCFParser():
         self.curr_AleleList = []
         self.curr_SVTYPE = "X"
 
-        self.alphabet_replace = [["A", "0"], [
-            "B", "1"], ["C", "2"], ["D", "3"]]
+        self.alphabet_replace = [["A", "1"], ["C", "2"], ["T", "3"], ["G", "4"], ["N", "5"]]
         # {"0": 0b0000, "1": 0b0001, "2": 0b0010, "3": 0b0011, "4": 0b0100, "5": 0b0101, "6": 0b0110, "7": 0b0111,
         #                "8": 0b1000, "9": 0b1001, "A" : 0b1010, "C": 0b1011, "T": 0b1100, "G": 0b1101, "X": }
 
@@ -199,24 +198,77 @@ class VCFParser():
         if self.isDebugMode:
             print("CurrAleleList is:", self.curr_AleleList)
 
+    def toStdString(self, string, size):
+        if len(string) <= size:
+            return '0'*(size - len(string)) + string
+        else:
+            print("[WritePhrase] ERROR: Values in VCF are higher than expected.")
+            exit(1)
+
+    def ACTGNtoInt(self, string):
+        for base, code in self.alphabet_replace:
+            string = string.replace(base, code)
+
+        return string
+
+    def Standarize(self, values_phrase):
+        list_new_values = []
+        new_values = ['' for _ in range(8)]
+        # 0 indv 4 char
+        new_values[0] = self.toStdString(values_phrase[0], 4)
+        # 1 chrom 3 char
+        new_values[1] = self.toStdString(values_phrase[1], 3)
+        # 2 alele 2 char
+        new_values[2] = self.toStdString(values_phrase[2], 2)
+        # 3 pos 9 char
+        new_values[3] = self.toStdString(values_phrase[3], 9)
+        # 4 len 6 char
+        new_values[4] = self.toStdString(values_phrase[4], 6)
+        # 5 edit below
+        # 6 pose_e 9 char
+        new_values[6] = self.toStdString(values_phrase[6], 9)
+        # 7 len_e 6 char
+        new_values[7] = self.toStdString(values_phrase[7], 6)
+
+        # 4 edit 4 char
+        tmp = values_phrase[5]
+
+        if(len(tmp) > 4):
+            # chop in blocks of 4
+            while len(tmp) > 4:
+                new_values[5] = tmp[:4]
+                list_new_values.append(new_values)
+                tmp = tmp[4:]
+            # if remains, save it
+            if(len(tmp) > 0):
+                new_values[5] = self.toStdString(tmp, 4)
+                list_new_values.append(new_values)
+        else:
+            new_values[5] = self.toStdString(tmp, 4)
+            list_new_values.append(new_values)
+
+        return list_new_values
+        
     def WritePhrase(self, list_values_phrase):
         #if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
-        # TODO: Make a fixed size file
-        for values_phrase in list_values_phrase:
-            phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\r\n".format(values_phrase[0],
-                                                                 values_phrase[1],
-                                                                 values_phrase[2],
-                                                                 values_phrase[3],
-                                                                 values_phrase[4],
-                                                                 values_phrase[5],
-                                                                 values_phrase[6],
-                                                                 values_phrase[7])
+        values_phrase = []
+        for values_phrase_raw in list_values_phrase:
+            values_phrase_list = self.Standarize(values_phrase_raw)
+            for values_phrase in values_phrase_list:
+                phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\r\n".format(values_phrase[0],
+                                                                    values_phrase[1],
+                                                                    values_phrase[2],
+                                                                    values_phrase[3],
+                                                                    values_phrase[4],
+                                                                    values_phrase[5],
+                                                                    values_phrase[6],
+                                                                    values_phrase[7])
 
-            #if self.isDebugMode: print("Phrase to be writed: ", phrase)
+                #if self.isDebugMode: print("Phrase to be writed: ", phrase)
 
-            phrase = phrase.encode("utf-8")
-            self.VCFParsed.write(phrase)
-            self.n_phrases += 1
+                phrase = phrase.encode("utf-8")
+                self.VCFParsed.write(phrase)
+                self.n_phrases += 1
 
     def FindValidVariantLength(self):
 
@@ -279,6 +331,7 @@ class VCFParser():
         self.CustomAddToPhraseCache([tmp_phrase])
 
     def CustomAddToPhraseCache(self, tmp_phrase):
+        tmp_phrase[5] = self.ACTGNtoInt(tmp_phrase[5])
         self.phrase_Cache.append(tmp_phrase)
 
     def CreateCustomPhrase(self, Chrom=None, Pos=None, Len=None,
