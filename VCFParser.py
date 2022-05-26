@@ -202,8 +202,9 @@ class VCFParser():
         if len(string) <= size:
             return '0'*(size - len(string)) + string
         else:
+            # TODO:  de donde sale? [WritePhrase] ERROR: Values in VCF are higher than expected. Value = 4581430570
             print("[WritePhrase] ERROR: Values in VCF are higher than expected. Value = {}".format(string))
-            exit(1)
+            return None
 
     def ACTGNtoInt(self, string):
         for base, code in self.alphabet_replace:
@@ -229,6 +230,13 @@ class VCFParser():
         new_values[6] = self.toStdString(str(values_phrase[6]), 9)
         # 7 len_e 6 char
         new_values[7] = self.toStdString(str(values_phrase[7]), 6)
+
+        # DEBUG
+        for v in new_values:
+            if not v:
+                print(values_phrase)
+                print(self.curr_Info)
+        # DEBUG
 
         # 4 edit 4 char
         tmp = values_phrase[5]
