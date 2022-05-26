@@ -316,8 +316,8 @@ class VCFParser():
         self.phrase_PosEdit = self.curr_Pos
         self.phrase_LenEdit = edit_length
 
-        list_tmp_phrase = [self.CreateCustomPhrase() for _ in range(n_copy)]
-        self.CustomAddToPhraseCache(list_tmp_phrase)
+        tmp_phrases_list = [self.CreateCustomPhrase() for _ in range(n_copy)]
+        self.CustomAddToPhraseCache(tmp_phrases_list)
 
     def AddToPhraseCache(self):
         tmp_phrase = [-1,  # self.phrase_INDV to complete
@@ -325,14 +325,13 @@ class VCFParser():
                       -1,  # self.phrase_Alele to complete
                       self.phrase_Pos,
                       self.phrase_Len,
-                      self.phrase_Edit,
+                      self.ACTGNtoInt(self.phrase_Edit),
                       self.phrase_PosEdit,
                       self.phrase_LenEdit]
         self.CustomAddToPhraseCache([tmp_phrase])
 
-    def CustomAddToPhraseCache(self, tmp_phrase):
-        tmp_phrase[5] = self.ACTGNtoInt(tmp_phrase[5])
-        self.phrase_Cache.append(tmp_phrase)
+    def CustomAddToPhraseCache(self, tmp_phrases_list):
+        self.phrase_Cache.append(tmp_phrases_list)
 
     def CreateCustomPhrase(self, Chrom=None, Pos=None, Len=None,
                            Edit=None, PosEdit=None, LenEdit=None):
@@ -344,6 +343,8 @@ class VCFParser():
                       Edit if Edit else self.phrase_Edit,
                       PosEdit if PosEdit else self.phrase_PosEdit,
                       LenEdit if LenEdit else self.phrase_LenEdit]
+
+        tmp_phrase[5] = self.ACTGNtoInt(tmp_phrase[5])
         return tmp_phrase
 
     def ProcessVariants(self):
