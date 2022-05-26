@@ -95,7 +95,7 @@ class VCFParser():
                         print("Oh no")
 
                     # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"
-                    for x in line[10:-2].split(","):
+                    for x in line[10:-1].split(","):
                         pair = x.split("=")
 
                         if pair[0] == "length":  # Necessary for invertion calculus
@@ -406,11 +406,10 @@ class VCFParser():
             values = self.ID_samples[key]
             aux_line = "{}\t{}\r\n".format(key, values)
             self.TMPRLZ.write(aux_line.encode("utf-8"))
-
         
 
     def ReportEndProcess(self):
-        print("Number of droped records:", self.n_droppedRecords)
+        print("Number of dropped records:", self.n_droppedRecords)
         if self.isDebugMode:
             print("---- RESUME META ----")
             print("\tCurr n_samples:", self.n_samples)
