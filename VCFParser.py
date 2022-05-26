@@ -7,6 +7,8 @@ import shutil
 from collections import OrderedDict
 
 # Last stable checked version f154f8f60e1b34327eb65374e13b2ee77410f647
+
+
 class VCFParser():
     def __init__(self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value=0, LeaveUnphasedAsPhased=True,
                  DiscardNotPASSRecords=True, debug=False):
@@ -69,7 +71,8 @@ class VCFParser():
         self.curr_AleleList = []
         self.curr_SVTYPE = "X"
 
-        self.alphabet_replace = [["A", "1"], ["C", "2"], ["T", "3"], ["G", "4"], ["N", "5"]]
+        self.alphabet_replace = [["A", "1"], [
+            "C", "2"], ["T", "3"], ["G", "4"], ["N", "5"]]
         # {"0": 0b0000, "1": 0b0001, "2": 0b0010, "3": 0b0011, "4": 0b0100, "5": 0b0101, "6": 0b0110, "7": 0b0111,
         #                "8": 0b1000, "9": 0b1001, "A" : 0b1010, "C": 0b1011, "T": 0b1100, "G": 0b1101, "X": }
 
@@ -203,8 +206,9 @@ class VCFParser():
             return '0'*(size - len(string)) + string
         else:
             # TODO:  de donde sale? [WritePhrase] ERROR: Values in VCF are higher than expected. Value = 4581430570
-            print("[WritePhrase] ERROR: Values in VCF are higher than expected. Value = {}".format(string))
-            return None
+            print(
+                "[WritePhrase] ERROR: Values in VCF are higher than expected. Value = {}".format(string))
+            exit(1)
 
     def ACTGNtoInt(self, string):
         for base, code in self.alphabet_replace:
@@ -214,7 +218,17 @@ class VCFParser():
 
     def Standarize(self, values_phrase):
         list_new_values = []
-        new_values = ['' for _ in range(8)]
+        isShort = values_phrase[6] == 0
+        new_values = ["" for _ in range(8)]
+
+        if isShort:
+            new_values[6] = "0"
+        else:
+            # 6 pose_e 9 char
+            new_values[6] = self.toStdString(str(values_phrase[6]), 10)
+            # 7 len_e 6 char
+            new_values[7] = self.toStdString(str(values_phrase[7]), 6)
+
         # 0 indv 4 char
         new_values[0] = self.toStdString(str(values_phrase[0]), 4)
         # 1 chrom 3 char
@@ -222,23 +236,10 @@ class VCFParser():
         # 2 alele 2 char
         new_values[2] = self.toStdString(str(values_phrase[2]), 2)
         # 3 pos 9 char
-        new_values[3] = self.toStdString(str(values_phrase[3]), 9)
+        new_values[3] = self.toStdString(str(values_phrase[3]), 10)
         # 4 len 6 char
         new_values[4] = self.toStdString(str(values_phrase[4]), 6)
-        # 5 edit below
-        # 6 pose_e 9 char
-        new_values[6] = self.toStdString(str(values_phrase[6]), 9)
-        # 7 len_e 6 char
-        new_values[7] = self.toStdString(str(values_phrase[7]), 6)
-
-        # DEBUG
-        for v in new_values:
-            if not v:
-                print(values_phrase)
-                print(self.curr_Info)
-        # DEBUG
-
-        # 4 edit 4 char
+        # 5 edit 4 char
         tmp = values_phrase[5]
 
         if(len(tmp) > 4):
@@ -255,22 +256,23 @@ class VCFParser():
             new_values[5] = self.toStdString(tmp, 4)
             list_new_values.append(new_values)
 
-        return list_new_values
-        
+        return list_new_values, isShort
+
     def WritePhrase(self, list_values_phrase):
         #if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
         values_phrase = []
         for values_phrase_raw in list_values_phrase:
-            values_phrase_list = self.Standarize(values_phrase_raw)
+            values_phrase_list, isShort = self.Standarize(values_phrase_raw)
+            template = "{}\t{}\t{}\t{}\t{}\t{}\t{}\r\n" if isShort else "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\r\n"
             for values_phrase in values_phrase_list:
-                phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\r\n".format(values_phrase[0],
-                                                                    values_phrase[1],
-                                                                    values_phrase[2],
-                                                                    values_phrase[3],
-                                                                    values_phrase[4],
-                                                                    values_phrase[5],
-                                                                    values_phrase[6],
-                                                                    values_phrase[7])
+                phrase = template.format(values_phrase[0],
+                                         values_phrase[1],
+                                         values_phrase[2],
+                                         values_phrase[3],
+                                         values_phrase[4],
+                                         values_phrase[5],
+                                         values_phrase[6],
+                                         values_phrase[7])
 
                 #if self.isDebugMode: print("Phrase to be writed: ", phrase)
 
@@ -307,6 +309,7 @@ class VCFParser():
         edit_length = self.FindValidVariantLength()
         self.phrase_Len = edit_length
         self.phrase_Edit = curr_Ref_data.get("ID")
+        # TODO no deberiamos trabajar con pos relativa, se arregla dsps
         self.phrase_PosEdit = self.ReferenceIndexTransform(
             curr_Ref_data.get("relPosRef") + self.curr_Pos + edit_length)
         self.phrase_LenEdit = self.phrase_Len
@@ -468,7 +471,6 @@ class VCFParser():
             values = self.ID_samples[key]
             aux_line = "{}\t{}\r\n".format(key, values)
             self.TMPRLZ.write(aux_line.encode("utf-8"))
-        
 
     def ReportEndProcess(self):
         print("Number of dropped records:", self.n_droppedRecords)
