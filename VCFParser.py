@@ -224,6 +224,7 @@ class VCFParser():
         if isShort:
             new_values[6] = "0"
         else:
+            print("Edit simbolico")
             # 6 pose_e 9 char
             new_values[6] = self.toStdString(str(values_phrase[6]), 10)
             # 7 len_e 6 char
