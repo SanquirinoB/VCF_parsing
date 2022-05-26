@@ -5,9 +5,10 @@ import re
 import os
 import shutil
 
+
 class VCFParser():
-    def __init__(self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value = 0, LeaveUnphasedAsPhased = True, 
-                DiscardNotPASSRecords = True, debug = False):
+    def __init__(self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value=0, LeaveUnphasedAsPhased=True,
+                 DiscardNotPASSRecords=True, debug=False):
         # Debug
         self.isDebugMode = debug
         # Reference to the VCF to be parsed
@@ -28,12 +29,13 @@ class VCFParser():
 
         # Helper parameters
         self.p_nucleotid_only = re.compile(r"[ACTGN]+")
-        self.p_cnv_record = re.compile(r"<CN[1-9][0-9]*>") # => <CNi> where i >= 1
+        self.p_cnv_record = re.compile(
+            r"<CN[1-9][0-9]*>")  # => <CNi> where i >= 1
         self.valid_record = True
 
         # Phrase base structure
-            # Everything related to indexes will be fixed for start at 0
-            # for the first element
+        # Everything related to indexes will be fixed for start at 0
+        # for the first element
         self.phrase_INDV = "X"
         self.phrase_Chrom = 0
         # self.phrase_Alele = 0
@@ -66,14 +68,15 @@ class VCFParser():
         self.curr_AleleList = []
         self.curr_SVTYPE = "X"
 
-        self.alphabet_replace = [["A", "0"], ["B", "1"], ["C", "2"], ["D", "3"]]
-        #{"0": 0b0000, "1": 0b0001, "2": 0b0010, "3": 0b0011, "4": 0b0100, "5": 0b0101, "6": 0b0110, "7": 0b0111, 
+        self.alphabet_replace = [["A", "0"], [
+            "B", "1"], ["C", "2"], ["D", "3"]]
+        # {"0": 0b0000, "1": 0b0001, "2": 0b0010, "3": 0b0011, "4": 0b0100, "5": 0b0101, "6": 0b0110, "7": 0b0111,
         #                "8": 0b1000, "9": 0b1001, "A" : 0b1010, "C": 0b1011, "T": 0b1100, "G": 0b1101, "X": }
 
     def ReferenceIndexTransform(self, index):
         return (2 * self.Length_Reference) - index - 1
 
-    def ProcessMETA(self, keep_meta = True):
+    def ProcessMETA(self, keep_meta=True):
         # The first line readed is the VCF Version
         # TODO: Querremos procesar esto? Quiza crear un assert de version
         line = self.VCF.readline()[:-1]
@@ -82,42 +85,44 @@ class VCFParser():
         # The last line allowed will be just before header line
         while line[:2] == "##":
             if keep_meta:
-                if line[:9] == "##contig=": # line = "##contig=<ID=GL000224.1,assembly=b37,length=179693>\n"
+                # line = "##contig=<ID=GL000224.1,assembly=b37,length=179693>\n"
+                if line[:9] == "##contig=":
 
-                    if not ("length" in line): # This value is not mandatory, so just in case
+                    if not ("length" in line):  # This value is not mandatory, so just in case
                         # TODO: Debemos recuperar el archivo de referencia y recuperar el largo
                         # de los strings
                         print("Oh no")
 
-                    for x in line[10:-2].split(","): # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"  
+                    # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"
+                    for x in line[10:-2].split(","):
                         pair = x.split("=")
 
-                        if pair[0] == "length": # Necessary for invertion calculus
+                        if pair[0] == "length":  # Necessary for invertion calculus
                             dict_aux["relPosRef"] = self.Length_Reference
                             self.Length_Reference += int(pair[1])
                             continue
 
                         dict_aux[pair[0]] = pair[1]
 
-
-                    ID = dict_aux.get("ID") # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
-                    dict_aux["internalID"] = self.counter_contig # Set ID to a shorter internal value as new ID
+                    # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
+                    ID = dict_aux.get("ID")
+                    # Set ID to a shorter internal value as new ID
+                    dict_aux["internalID"] = self.counter_contig
                     self.counter_contig += 1
 
-                    self.meta_ReferenceValues[ID] = dict_aux.copy() # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
+                    # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
+                    self.meta_ReferenceValues[ID] = dict_aux.copy()
                     dict_aux.clear()
 
             # TODO: The rest of the lines
             line = self.VCF.readline()[:-1]
-        
+
         # This last line its supposed to be the header line
         tmp_ID_samples = line.split("\t")[9:]
-        self.n_samples = len(tmp_ID_samples) 
+        self.n_samples = len(tmp_ID_samples)
         self.ID_samples = {}
         for i in range(self.n_samples):
             self.ID_samples[i] = tmp_ID_samples[i]
-        
-
 
     def ProcessFORMAT(self, raw_FORMAT):
         """
@@ -134,7 +139,8 @@ class VCFParser():
         self.curr_Format = dict_FormatIndex
 
     def ProcessINFO(self, raw_INFO):
-        if raw_INFO == self.MISSING: return
+        if raw_INFO == self.MISSING:
+            return
         list_INFO = raw_INFO.split(";")
         dict_INFO = {}
         key, value = "X", 0
@@ -142,14 +148,13 @@ class VCFParser():
 
             if "=" in infoPair:
                 key, value = infoPair.split("=")
-            else: # Is flag
+            else:  # Is flag
                 key, value = infoPair, "True"
 
             if key == "END":
                 value = [int(x) - 1 for x in value.split(",")]
             elif key == "SVLEN":
                 value = [int(x) for x in value.split(",")]
-
 
             dict_INFO[key] = value
 
@@ -165,7 +170,8 @@ class VCFParser():
         self.curr_REF = record[3]
         self.curr_AltList = record[4].split(',')
 
-        if self.isDebugMode: print("Current AltList: ", self.curr_AltList)
+        if self.isDebugMode:
+            print("Current AltList: ", self.curr_AltList)
 
         self.ProcessINFO(record[7])
         self.ProcessFORMAT(record[8])
@@ -181,70 +187,79 @@ class VCFParser():
 
         if ("/" in raw_AleleList):
             raw_AleleList = raw_AleleList.replace("/", "|")
-            self.curr_AleleList = raw_AleleList.split("|") if self.UnphasedAsPhased else []
+            self.curr_AleleList = raw_AleleList.split(
+                "|") if self.UnphasedAsPhased else []
         else:
             self.curr_AleleList = raw_AleleList.split("|")
 
-        self.curr_AleleList = [int(x) if x != "." else self.MISS_AleleAlt for x in self.curr_AleleList]
+        self.curr_AleleList = [
+            int(x) if x != "." else self.MISS_AleleAlt for x in self.curr_AleleList]
 
-        if self.isDebugMode: print("CurrAleleList is:", self.curr_AleleList)
+        if self.isDebugMode:
+            print("CurrAleleList is:", self.curr_AleleList)
 
     def WritePhrase(self, list_values_phrase):
         #if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
         # TODO: Make a fixed size file
         for values_phrase in list_values_phrase:
             phrase = "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\r\n".format(values_phrase[0],
-                                                                values_phrase[1],
-                                                                values_phrase[2],
-                                                                values_phrase[3],
-                                                                values_phrase[4],
-                                                                values_phrase[5],
-                                                                values_phrase[6],
-                                                                values_phrase[7])
-            
+                                                                 values_phrase[1],
+                                                                 values_phrase[2],
+                                                                 values_phrase[3],
+                                                                 values_phrase[4],
+                                                                 values_phrase[5],
+                                                                 values_phrase[6],
+                                                                 values_phrase[7])
+
             #if self.isDebugMode: print("Phrase to be writed: ", phrase)
 
             phrase = phrase.encode("utf-8")
             self.VCFParsed.write(phrase)
             self.n_phrases += 1
-    
+
     def FindValidVariantLength(self):
 
         if "END" in self.curr_Info.keys():
             # END is 1-based, tecnically this return should be (END - 1) - POS + 1
             return self.curr_Info.get("END")[self.curr_AltIndex - 1] - self.curr_Pos
         elif "SVLEN" in self.curr_Info.keys():
-            return self.curr_Info.get("SVLEN")[self.curr_AltIndex - 1] 
+            return self.curr_Info.get("SVLEN")[self.curr_AltIndex - 1]
         else:
-            print("[FindValidVariantLength] ERROR: Valid end value (END/SVLEN) not found. Variant can't be processed.")
+            print(
+                "[FindValidVariantLength] ERROR: Valid end value (END/SVLEN) not found. Variant can't be processed.")
             exit(1)
-        
+
     def GenerateDeletionPhraseCache(self):
-        edit_length = self.FindValidVariantLength() # If it doesnt work, the exception will be thrown in this function
+        # If it doesnt work, the exception will be thrown in this function
+        edit_length = self.FindValidVariantLength()
         self.phrase_Len = edit_length
         self.phrase_Edit = ""
         self.phrase_PosEdit = 0
         self.phrase_LenEdit = 0
 
-        self.AddToPhraseCache() # Done
+        self.AddToPhraseCache()  # Done
 
     def GenerateInversionPhraseCache(self):
         curr_Ref_data = self.meta_ReferenceValues.get(self.curr_Chrom)
 
-        edit_length = self.FindValidVariantLength() # If it doesnt work, the exception will be thrown in this function
+        # If it doesnt work, the exception will be thrown in this function
+        edit_length = self.FindValidVariantLength()
         self.phrase_Len = edit_length
         self.phrase_Edit = curr_Ref_data.get("ID")
-        self.phrase_PosEdit = self.ReferenceIndexTransform(curr_Ref_data.get("relPosRef") + self.curr_Pos + edit_length)
+        self.phrase_PosEdit = self.ReferenceIndexTransform(
+            curr_Ref_data.get("relPosRef") + self.curr_Pos + edit_length)
         self.phrase_LenEdit = self.phrase_Len
 
-        self.AddToPhraseCache() # Done
+        self.AddToPhraseCache()  # Done
 
     def GenerateDuplicationPhraseCache(self):
-        edit_length = self.FindValidVariantLength() # If it doesnt work, the exception will be thrown in this function
+        # If it doesnt work, the exception will be thrown in this function
+        edit_length = self.FindValidVariantLength()
         n_copy = int(self.curr_Alt[3:-1])
-        
+
         self.phrase_Len = 0
-        self.phrase_Edit = self.meta_ReferenceValues.get(self.curr_Chrom).get("ID")
+        self.phrase_Edit = self.meta_ReferenceValues.get(
+            self.curr_Chrom).get("ID")
         self.phrase_PosEdit = self.curr_Pos
         self.phrase_LenEdit = edit_length
 
@@ -252,47 +267,47 @@ class VCFParser():
         self.CustomAddToPhraseCache(list_tmp_phrase)
 
     def AddToPhraseCache(self):
-        tmp_phrase = [-1, # self.phrase_INDV to complete
-                    self.phrase_Chrom,
-                    -1, # self.phrase_Alele to complete
-                    self.phrase_Pos,
-                    self.phrase_Len,
-                    self.phrase_Edit,
-                    self.phrase_PosEdit,
-                    self.phrase_LenEdit]
+        tmp_phrase = [-1,  # self.phrase_INDV to complete
+                      self.phrase_Chrom,
+                      -1,  # self.phrase_Alele to complete
+                      self.phrase_Pos,
+                      self.phrase_Len,
+                      self.phrase_Edit,
+                      self.phrase_PosEdit,
+                      self.phrase_LenEdit]
         self.CustomAddToPhraseCache([tmp_phrase])
 
     def CustomAddToPhraseCache(self, tmp_phrase):
         self.phrase_Cache.append(tmp_phrase)
-    
-    def CreateCustomPhrase(self, Chrom = None, Pos = None, Len = None,
-                            Edit = None, PosEdit = None, LenEdit = None):
-        tmp_phrase = [-1, # self.phrase_INDV to complete
-                    Chrom if Chrom else self.phrase_Chrom,
-                    -1, # self.phrase_Alele to complete
-                    Pos if Pos else self.phrase_Pos,
-                    Len if Len else self.phrase_Len,
-                    Edit if Edit else self.phrase_Edit,
-                    PosEdit if PosEdit else self.phrase_PosEdit,
-                    LenEdit if LenEdit else self.phrase_LenEdit]
+
+    def CreateCustomPhrase(self, Chrom=None, Pos=None, Len=None,
+                           Edit=None, PosEdit=None, LenEdit=None):
+        tmp_phrase = [-1,  # self.phrase_INDV to complete
+                      Chrom if Chrom else self.phrase_Chrom,
+                      -1,  # self.phrase_Alele to complete
+                      Pos if Pos else self.phrase_Pos,
+                      Len if Len else self.phrase_Len,
+                      Edit if Edit else self.phrase_Edit,
+                      PosEdit if PosEdit else self.phrase_PosEdit,
+                      LenEdit if LenEdit else self.phrase_LenEdit]
         return tmp_phrase
 
     def ProcessVariants(self):
 
         for alt in self.curr_AltList:
             self.curr_Alt = alt
-            if re.fullmatch(self.p_nucleotid_only, alt): # If its an explicit edit
+            if re.fullmatch(self.p_nucleotid_only, alt):  # If its an explicit edit
                 self.phrase_PosEdit = 0
                 self.phrase_LenEdit = 0
                 self.phrase_Edit = alt
 
-                self.AddToPhraseCache() # Done
-            elif "SVTYPE" in self.curr_Info.keys(): # If its an external reference edit, we should check the SVTYPE
+                self.AddToPhraseCache()  # Done
+            elif "SVTYPE" in self.curr_Info.keys():  # If its an external reference edit, we should check the SVTYPE
                 self.curr_SVTYPE = self.curr_Info.get("SVTYPE")
 
                 if self.curr_SVTYPE == "DEL" or alt == "<CN0>":
                     self.GenerateDeletionPhraseCache()
-                    
+
                 elif self.curr_SVTYPE == "INV" and alt == "<INV>":
                     self.GenerateInversionPhraseCache()
 
@@ -301,17 +316,20 @@ class VCFParser():
                     self.GenerateDuplicationPhraseCache()
 
             else:
-                if self.isDebugMode: print("(!) Edit no canonico descartado.")
+                if self.isDebugMode:
+                    print("(!) Edit no canonico descartado.")
                 self.n_droppedRecords += 1
                 self.valid_record = False
 
-        if self.isDebugMode: print("Edits obtained: ", len(self.phrase_Cache), "\nPhrases: ", self.phrase_Cache)
-    
+        if self.isDebugMode:
+            print("Edits obtained: ", len(self.phrase_Cache),
+                  "\nPhrases: ", self.phrase_Cache)
+
     def CleanUpData(self):
         self.phrase_Cache = []
 
     def ProcessRECORDS(self):
-    
+
         raw_record = self.VCF.readline()
 
         while raw_record:
@@ -321,7 +339,8 @@ class VCFParser():
 
             # Filter check
             if (self.DiscardNotPASSRecords and record[6] != "PASS"):
-                print("(!) WARNING|FILTER: Se ha descartado un registro por no cumplir con FILTER=PASS. Edit nro {}".format(-1))
+                print(
+                    "(!) WARNING|FILTER: Se ha descartado un registro por no cumplir con FILTER=PASS. Edit nro {}".format(-1))
                 raw_record = self.VCF.readline()
                 continue
 
@@ -334,20 +353,21 @@ class VCFParser():
             self.ProcessVariants()
 
             if self.valid_record:
-            # Over each sample
+                # Over each sample
                 for i in range(self.n_samples):
-                    if self.isDebugMode: print("For sample ", self.ID_samples.get(i))
+                    if self.isDebugMode:
+                        print("For sample ", self.ID_samples.get(i))
                     # Set internal id
                     self.phrase_INDV = i
 
                     self.UpdateAlelesList(raw_AleleFullList[i])
 
-                    for j in range(len(self.curr_AleleList)): # Over each alele
+                    for j in range(len(self.curr_AleleList)):  # Over each alele
                         #if self.isDebugMode: print("For alele ", j, "with variant index", self.curr_AleleList[j] - 1)
-                        
-                        if self.curr_AleleList[j] == 0: # If there's no change, we continue
+
+                        # If there's no change, we continue
+                        if self.curr_AleleList[j] == 0:
                             continue
-                        
 
                         self.curr_AltIndex = self.curr_AleleList[j] - 1
                         tmp_values_phrase = self.phrase_Cache[self.curr_AltIndex]
@@ -366,19 +386,24 @@ class VCFParser():
 
     def GenerateRLZResume(self):
         # We need to report
-        aux_line = "{}".format(self.n_phrases)
+        aux_line = "{}\r\n".format(self.counter_contig)
+        self.TMPRLZ.write(aux_line.encode("utf-8"))
+        for key in self.meta_ReferenceValues.keys():
+            key_values = self.meta_ReferenceValues[key]
+            aux_line = "{}\t{}\r\n".format(key_values.get(
+                "internal_ID"), key_values.get("ID"), key_values.get("relPosRef"))
+
+        aux_line = "{}\r\n".format(self.n_phrases)
         self.TMPRLZ.write(aux_line.encode("utf-8"))
 
-    
     def ReportEndProcess(self):
         print("Number of droped records:", self.n_droppedRecords)
-        if self.isDebugMode: 
+        if self.isDebugMode:
             print("---- RESUME META ----")
             print("\tCurr n_samples:", self.n_samples)
             print("\tCurr IDs:", self.ID_samples)
             print("\tMeta reference values:", self.meta_ReferenceValues)
             print("\tReference length:", self.Length_Reference)
-
 
     def StartParsing(self):
         # SUPUESTOS: Recibimos VCF separados por cromosoma
@@ -402,9 +427,11 @@ class VCFParser():
         is_first_meta = True
         for path_file in self.path_file_list:
 
-            file_name = path_file.split("/")[-1][:-4] # Get name and remove .vcf
+            # Get name and remove .vcf
+            file_name = path_file.split("/")[-1][:-4]
 
-            path_fileParsed = os.path.join(parsing_folder, file_name + ".tmprlz")
+            path_fileParsed = os.path.join(
+                parsing_folder, file_name + ".tmprlz")
 
             with open(path_file, mode="r") as aux_VCF, open(path_fileParsed, mode="wb+") as aux_VCFParsed:
 
@@ -413,16 +440,15 @@ class VCFParser():
                 self.VCFParsed = aux_VCFParsed
 
                 # Collect VCF metainformation
-                self.ProcessMETA(keep_meta=is_first_meta)    
+                self.ProcessMETA(keep_meta=is_first_meta)
                 is_first_meta = False
 
                 # Interpretate edits
-                self.ProcessRECORDS()   
+                self.ProcessRECORDS()
 
-        self.ReportEndProcess()  
+        self.ReportEndProcess()
 
         path_resume = os.path.join(metadata_folder, "Resume.metarlz")
-        with open(path_resume, mode = "wb") as aux_TMPRLZ:
+        with open(path_resume, mode="wb") as aux_TMPRLZ:
             self.TMPRLZ = aux_TMPRLZ
-            self.GenerateRLZResume()  
-
+            self.GenerateRLZResume()
