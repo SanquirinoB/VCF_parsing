@@ -388,10 +388,12 @@ class VCFParser():
         # We need to report
         aux_line = "{}\r\n".format(self.counter_contig)
         self.TMPRLZ.write(aux_line.encode("utf-8"))
+        
         for key in self.meta_ReferenceValues.keys():
             key_values = self.meta_ReferenceValues[key]
             aux_line = "{}\t{}\r\n".format(key_values.get(
                 "internal_ID"), key_values.get("ID"), key_values.get("relPosRef"))
+            self.TMPRLZ.write(aux_line.encode("utf-8"))
 
         aux_line = "{}\r\n".format(self.n_phrases)
         self.TMPRLZ.write(aux_line.encode("utf-8"))
