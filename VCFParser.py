@@ -386,18 +386,28 @@ class VCFParser():
             raw_record = self.VCF.readline()
 
     def GenerateRLZResume(self):
-        # We need to report
+        # Number of phrases (int)
+        aux_line = "{}\r\n".format(self.n_phrases)
+        self.TMPRLZ.write(aux_line.encode("utf-8"))
+
+        # Number of contigs (int)
         aux_line = "{}\r\n".format(self.counter_contig)
         self.TMPRLZ.write(aux_line.encode("utf-8"))
 
+        # Contigs and theirs IDs (IID, ID, int)
         for key in self.meta_ReferenceValues.keys():
             key_values = self.meta_ReferenceValues[key]
-            aux_line = "{}\t{}\r\n".format(key_values.get(
+            aux_line = "{}\t{}\t{}\r\n".format(key_values.get(
                 "internalID"), key_values.get("ID"), key_values.get("relPosRef"))
             self.TMPRLZ.write(aux_line.encode("utf-8"))
 
-        aux_line = "{}\r\n".format(self.n_phrases)
-        self.TMPRLZ.write(aux_line.encode("utf-8"))
+        # Samples names and theirs IDs (IID, ID)
+        for key in self.ID_samples.keys():
+            values = self.ID_samples[key]
+            aux_line = "{}\t{}\r\n".format(key, values)
+            self.TMPRLZ.write(aux_line.encode("utf-8"))
+
+        
 
     def ReportEndProcess(self):
         print("Number of droped records:", self.n_droppedRecords)
