@@ -218,7 +218,7 @@ class VCFParser():
 
     def Standarize(self, values_phrase):
         list_new_values = []
-        isShort = values_phrase[6] == 0
+        isShort = (values_phrase[6] == 0)
         new_values = ["" for _ in range(8)]
 
         if isShort:
