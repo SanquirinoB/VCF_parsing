@@ -202,7 +202,7 @@ class VCFParser():
         if len(string) <= size:
             return '0'*(size - len(string)) + string
         else:
-            print("[WritePhrase] ERROR: Values in VCF are higher than expected.")
+            print("[WritePhrase] ERROR: Values in VCF are higher than expected. Value = {}".format(string))
             exit(1)
 
     def ACTGNtoInt(self, string):
