@@ -6,7 +6,7 @@ import os
 import shutil
 from collections import OrderedDict
 
-
+# Last stable checked version f154f8f60e1b34327eb65374e13b2ee77410f647
 class VCFParser():
     def __init__(self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value=0, LeaveUnphasedAsPhased=True,
                  DiscardNotPASSRecords=True, debug=False):
