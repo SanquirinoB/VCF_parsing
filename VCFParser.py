@@ -4,6 +4,7 @@
 import re
 import os
 import shutil
+from collections import OrderedDict
 
 
 class VCFParser():
@@ -48,7 +49,7 @@ class VCFParser():
         self.phrase_Cache = []
 
         # Variables for VCF metadata processing
-        self.meta_ReferenceValues = {}
+        self.meta_ReferenceValues = OrderedDict()
         self.counter_contig = 0
         self.ID_samples = {}
         self.n_samples = 0
