@@ -215,20 +215,20 @@ class VCFParser():
         list_new_values = []
         new_values = ['' for _ in range(8)]
         # 0 indv 4 char
-        new_values[0] = self.toStdString(values_phrase[0], 4)
+        new_values[0] = self.toStdString(str(values_phrase[0]), 4)
         # 1 chrom 3 char
-        new_values[1] = self.toStdString(values_phrase[1], 3)
+        new_values[1] = self.toStdString(str(values_phrase[1]), 3)
         # 2 alele 2 char
-        new_values[2] = self.toStdString(values_phrase[2], 2)
+        new_values[2] = self.toStdString(str(values_phrase[2]), 2)
         # 3 pos 9 char
-        new_values[3] = self.toStdString(values_phrase[3], 9)
+        new_values[3] = self.toStdString(str(values_phrase[3]), 9)
         # 4 len 6 char
-        new_values[4] = self.toStdString(values_phrase[4], 6)
+        new_values[4] = self.toStdString(str(values_phrase[4]), 6)
         # 5 edit below
         # 6 pose_e 9 char
-        new_values[6] = self.toStdString(values_phrase[6], 9)
+        new_values[6] = self.toStdString(str(values_phrase[6]), 9)
         # 7 len_e 6 char
-        new_values[7] = self.toStdString(values_phrase[7], 6)
+        new_values[7] = self.toStdString(str(values_phrase[7]), 6)
 
         # 4 edit 4 char
         tmp = values_phrase[5]

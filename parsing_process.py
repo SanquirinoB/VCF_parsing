@@ -11,7 +11,7 @@ if __name__ == "__main__":
         # TODO: Ahora asumimos que todo correcto no mas
         # (self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value = 0, LeaveUnphasedAsPhased = True, 
         # DiscardNotPASSRecords = True, debug = False):
-        parser = VCFParser(sys.argv[1], sys.argv[- int(sys.argv[3]):], 0, True, True, True)
+        parser = VCFParser(sys.argv[1], sys.argv[- int(sys.argv[3]):], 0, True, True, False)
     else:
         # TODO usar https://docs.python.org/3/library/argparse.html
         exp = """
