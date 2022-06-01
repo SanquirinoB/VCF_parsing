@@ -218,16 +218,7 @@ class VCFParser():
 
     def Standarize(self, values_phrase):
         list_new_values = []
-        isShort = (values_phrase[6] == 0)
         new_values = ["" for _ in range(8)]
-
-        if isShort:
-            new_values[6] = "0"
-        else:
-            # 6 pose_e 9 char
-            new_values[6] = self.toStdString(str(values_phrase[6]), 10)
-            # 7 len_e 6 char
-            new_values[7] = self.toStdString(str(values_phrase[7]), 6)
 
         # 0 indv 4 char
         new_values[0] = self.toStdString(str(values_phrase[0]), 4)
@@ -256,14 +247,19 @@ class VCFParser():
             new_values[5] = self.toStdString(tmp, 4)
             list_new_values.append(new_values)
 
-        return list_new_values, isShort
+        # 6 pose_e 9 char
+        new_values[6] = self.toStdString(str(values_phrase[6]), 10)
+        # 7 len_e 6 char
+        new_values[7] = self.toStdString(str(values_phrase[7]), 6)
+
+        return list_new_values
 
     def WritePhrase(self, list_values_phrase):
         #if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
         values_phrase = []
         for values_phrase_raw in list_values_phrase:
-            values_phrase_list, isShort = self.Standarize(values_phrase_raw)
-            template = "{}\t{}\t{}\t{}\t{}\t{}\t{}\r\n" if isShort else "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\r\n"
+            values_phrase_list = self.Standarize(values_phrase_raw)
+            template = "{}{}{}{}{}{}{}{}\r\n"
             for values_phrase in values_phrase_list:
                 phrase = template.format(values_phrase[0],
                                          values_phrase[1],
