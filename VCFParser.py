@@ -263,7 +263,7 @@ class VCFParser():
         values_phrase = []
         for values_phrase_raw in list_values_phrase:
             values_phrase_list, isShort = self.Standarize(values_phrase_raw)
-            template = "{}\t{}\t{}\t{}\t{}\t{}\t{}\r\n" if isShort else "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\r\n"
+            template = "{}{}{}{}{}{}{}\r\n" if isShort else "{}{}{}{}{}{}{}{}\r\n"
             for values_phrase in values_phrase_list:
                 phrase = template.format(values_phrase[0],
                                          values_phrase[1],
