@@ -276,7 +276,7 @@ class VCFParser():
 
                 #if self.isDebugMode: print("Phrase to be writed: ", phrase)
 
-                phrase = phrase.encode("utf-8")
+                phrase = phrase.encode("ascii")
                 self.VCFParsed.write(phrase)
                 self.n_phrases += 1
 
@@ -453,24 +453,24 @@ class VCFParser():
     def GenerateRLZResume(self):
         # Number of phrases (int)
         aux_line = "{}\r\n".format(self.n_phrases)
-        self.TMPRLZ.write(aux_line.encode("utf-8"))
+        self.TMPRLZ.write(aux_line.encode("ascii"))
 
         # Number of contigs (int)
         aux_line = "{}\r\n".format(self.counter_contig)
-        self.TMPRLZ.write(aux_line.encode("utf-8"))
+        self.TMPRLZ.write(aux_line.encode("ascii"))
 
         # Contigs and theirs IDs (IID, ID, int)
         for key in self.meta_ReferenceValues.keys():
             key_values = self.meta_ReferenceValues[key]
             aux_line = "{}\t{}\t{}\r\n".format(key_values.get(
                 "internalID"), key_values.get("ID"), key_values.get("relPosRef"))
-            self.TMPRLZ.write(aux_line.encode("utf-8"))
+            self.TMPRLZ.write(aux_line.encode("ascii"))
 
         # Samples names and theirs IDs (IID, ID)
         for key in self.ID_samples.keys():
             values = self.ID_samples[key]
             aux_line = "{}\t{}\r\n".format(key, values)
-            self.TMPRLZ.write(aux_line.encode("utf-8"))
+            self.TMPRLZ.write(aux_line.encode("ascii"))
 
     def ReportEndProcess(self):
         print("Number of dropped records:", self.n_droppedRecords)
