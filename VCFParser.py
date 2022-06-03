@@ -5,8 +5,21 @@ import re
 import os
 import shutil
 from collections import OrderedDict
+import ctypes
 
 # Last stable checked version f154f8f60e1b34327eb65374e13b2ee77410f647
+
+
+class Phrase(ctypes.Structure):
+    _fields_: [("m_indv", ctypes.c_ushort),
+               ("m_chrom", ctypes.c_ubyte),
+               ("m_alele", ctypes.c_ubyte),
+               ("m_pos", ctypes.c_uint),
+               ("m_pos_e", ctypes.c_uint),
+               ("m_edit", ctypes.c_char),
+               ("m_len", ctypes.c_char),
+               ("m_len_e", ctypes.c_char)]
+
 
 
 class VCFParser():
@@ -49,6 +62,8 @@ class VCFParser():
         self.phrase_LenEdit = 0
 
         self.phrase_Cache = []
+
+        self.phrase_struct = Phrase()
 
         # Variables for VCF metadata processing
         self.meta_ReferenceValues = OrderedDict()
@@ -265,19 +280,27 @@ class VCFParser():
             values_phrase_list, isShort = self.Standarize(values_phrase_raw)
             template = "{}{}{}{}{}{}{}\r\n" if isShort else "{}{}{}{}{}{}{}{}\r\n"
             for values_phrase in values_phrase_list:
-                phrase = template.format(values_phrase[0],
-                                         values_phrase[1],
-                                         values_phrase[2],
-                                         values_phrase[3],
-                                         values_phrase[4],
-                                         values_phrase[5],
-                                         values_phrase[6],
-                                         values_phrase[7])
+                self.phrase_struct.m_indv = values_phrase[0]
+                self.phrase_struct.m_chrom = values_phrase[1]
+                self.phrase_struct.m_alele = values_phrase[2]
+                self.phrase_struct.m_pos = values_phrase[3]
+                self.phrase_struct.m_len = values_phrase[4]
+                self.phrase_struct.m_edit = values_phrase[5]
+                self.phrase_struct.m_pos_e = values_phrase[6]
+                self.phrase_struct.m_len_e = values_phrase[7]
+                # phrase = template.format(values_phrase[0],
+                #                          values_phrase[1],
+                #                          values_phrase[2],
+                #                          values_phrase[3],
+                #                          values_phrase[4],
+                #                          values_phrase[5],
+                #                          values_phrase[6],
+                #                          values_phrase[7])
 
                 #if self.isDebugMode: print("Phrase to be writed: ", phrase)
 
-                phrase = phrase.encode("ascii")
-                self.VCFParsed.write(phrase)
+                #phrase = phrase.encode("ascii")
+                self.VCFParsed.write(bytearray(self.phrase_struct))
                 self.n_phrases += 1
 
     def FindValidVariantLength(self):
