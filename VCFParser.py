@@ -11,7 +11,7 @@ import ctypes
 
 
 class Phrase(ctypes.Structure):
-    _fields_: [("m_indv", ctypes.c_ushort),
+    _fields_ = [("m_indv", ctypes.c_ushort),
                ("m_chrom", ctypes.c_ubyte),
                ("m_alele", ctypes.c_ubyte),
                ("m_pos", ctypes.c_uint),
