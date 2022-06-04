@@ -225,11 +225,14 @@ class VCFParser():
                 "[WritePhrase] ERROR: Values in VCF are higher than expected. Value = {}".format(string))
             exit(1)
 
-    def ACTGNtoInt(self, string):
-        for base, code in self.alphabet_replace:
-            string = string.replace(base, code)
+    def ACTGNtoInt(self, value):
+        if type(value) == int:
+            return value
+        else:
+            for base, code in self.alphabet_replace:
+                value = value.replace(base, code)
 
-        return int(string)
+            return int(value)
 
     def Standarize(self, values_phrase):
         list_new_values = []
