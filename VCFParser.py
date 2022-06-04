@@ -74,7 +74,7 @@ class VCFParser():
         self.n_phrases = 0
 
         # Variables for VCF record processing
-        self.curr_Chrom = "X"
+        self.curr_Chrom = ""
         self.curr_Pos = 0
         #self.curr_ID = "X"
         self.curr_REF = "X"
@@ -195,7 +195,7 @@ class VCFParser():
         self.ProcessFORMAT(record[8])
 
     def UpdateGenericPhraseValues(self):
-        self.phrase_Chrom = self.curr_Chrom
+        self.phrase_Chrom = int(self.curr_Chrom)
         self.phrase_Pos = self.curr_Pos
         self.phrase_Len = len(self.curr_REF)
 
@@ -274,33 +274,31 @@ class VCFParser():
         return list_new_values, isShort
 
     def WritePhrase(self, list_values_phrase):
-        #if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
-        values_phrase = []
-        for values_phrase_list in list_values_phrase:
-            
-            for values_phrase in values_phrase_list:
-                self.phrase_struct.m_indv = values_phrase[0]
-                self.phrase_struct.m_chrom = values_phrase[1]
-                self.phrase_struct.m_alele = values_phrase[2]
-                self.phrase_struct.m_pos = values_phrase[3]
-                self.phrase_struct.m_len = values_phrase[4]
-                self.phrase_struct.m_edit = values_phrase[5]
-                self.phrase_struct.m_pos_e = values_phrase[6]
-                self.phrase_struct.m_len_e = values_phrase[7]
-                # phrase = template.format(values_phrase[0],
-                #                          values_phrase[1],
-                #                          values_phrase[2],
-                #                          values_phrase[3],
-                #                          values_phrase[4],
-                #                          values_phrase[5],
-                #                          values_phrase[6],
-                #                          values_phrase[7])
+        #if self.isDebugMode: 
+        print("Phrases to be writed: ", len(list_values_phrase))
+        for values_phrase in list_values_phrase:
+            self.phrase_struct.m_indv = values_phrase[0]
+            self.phrase_struct.m_chrom = values_phrase[1]
+            self.phrase_struct.m_alele = values_phrase[2]
+            self.phrase_struct.m_pos = values_phrase[3]
+            self.phrase_struct.m_len = values_phrase[4]
+            self.phrase_struct.m_edit = values_phrase[5]
+            self.phrase_struct.m_pos_e = values_phrase[6]
+            self.phrase_struct.m_len_e = values_phrase[7]
+            # phrase = template.format(values_phrase[0],
+            #                          values_phrase[1],
+            #                          values_phrase[2],
+            #                          values_phrase[3],
+            #                          values_phrase[4],
+            #                          values_phrase[5],
+            #                          values_phrase[6],
+            #                          values_phrase[7])
 
-                #if self.isDebugMode: print("Phrase to be writed: ", phrase)
+            #if self.isDebugMode: print("Phrase to be writed: ", phrase)
 
-                #phrase = phrase.encode("ascii")
-                self.VCFParsed.write(bytearray(self.phrase_struct))
-                self.n_phrases += 1
+            #phrase = phrase.encode("ascii")
+            self.VCFParsed.write(bytearray(self.phrase_struct))
+            self.n_phrases += 1
 
     def FindValidVariantLength(self):
 
@@ -318,7 +316,7 @@ class VCFParser():
         # If it doesnt work, the exception will be thrown in this function
         edit_length = self.FindValidVariantLength()
         self.phrase_Len = edit_length
-        self.phrase_Edit = ""
+        self.phrase_Edit = 0
         self.phrase_PosEdit = 0
         self.phrase_LenEdit = 0
 
@@ -330,7 +328,7 @@ class VCFParser():
         # If it doesnt work, the exception will be thrown in this function
         edit_length = self.FindValidVariantLength()
         self.phrase_Len = edit_length
-        self.phrase_Edit = curr_Ref_data.get("ID")
+        self.phrase_Edit = curr_Ref_data.get("internalID")
         # TODO no deberiamos trabajar con pos relativa, se arregla dsps
         self.phrase_PosEdit = self.ReferenceIndexTransform(
             curr_Ref_data.get("relPosRef") + self.curr_Pos + edit_length)
@@ -345,7 +343,7 @@ class VCFParser():
 
         self.phrase_Len = 0
         self.phrase_Edit = self.meta_ReferenceValues.get(
-            self.curr_Chrom).get("ID")
+            self.curr_Chrom).get("internalID")
         self.phrase_PosEdit = self.curr_Pos
         self.phrase_LenEdit = edit_length
 
