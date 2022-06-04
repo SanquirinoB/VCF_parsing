@@ -52,7 +52,7 @@ class VCFParser():
         # Phrase base structure
         # Everything related to indexes will be fixed for start at 0
         # for the first element
-        self.phrase_INDV = "X"
+        self.phrase_INDV = 0
         self.phrase_Chrom = 0
         # self.phrase_Alele = 0
         self.phrase_Pos = 0
@@ -229,7 +229,7 @@ class VCFParser():
         for base, code in self.alphabet_replace:
             string = string.replace(base, code)
 
-        return string
+        return int(string)
 
     def Standarize(self, values_phrase):
         list_new_values = []
@@ -276,9 +276,8 @@ class VCFParser():
     def WritePhrase(self, list_values_phrase):
         #if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
         values_phrase = []
-        for values_phrase_raw in list_values_phrase:
-            values_phrase_list, isShort = self.Standarize(values_phrase_raw)
-            template = "{}{}{}{}{}{}{}\r\n" if isShort else "{}{}{}{}{}{}{}{}\r\n"
+        for values_phrase_list in list_values_phrase:
+            
             for values_phrase in values_phrase_list:
                 self.phrase_struct.m_indv = values_phrase[0]
                 self.phrase_struct.m_chrom = values_phrase[1]
