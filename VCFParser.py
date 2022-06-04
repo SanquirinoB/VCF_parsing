@@ -16,9 +16,9 @@ class Phrase(ctypes.Structure):
                ("m_alele", ctypes.c_ubyte),
                ("m_pos", ctypes.c_uint),
                ("m_pos_e", ctypes.c_uint),
-               ("m_edit", ctypes.c_char),
-               ("m_len", ctypes.c_char),
-               ("m_len_e", ctypes.c_char)]
+               ("m_edit", ctypes.c_ushort),
+               ("m_len", ctypes.c_uint),
+               ("m_len_e", ctypes.c_uint)]
 
 
 
@@ -57,7 +57,7 @@ class VCFParser():
         # self.phrase_Alele = 0
         self.phrase_Pos = 0
         self.phrase_Len = 0
-        self.phrase_Edit = "X"
+        self.phrase_Edit = 0
         self.phrase_PosEdit = 0
         self.phrase_LenEdit = 0
 
@@ -358,7 +358,7 @@ class VCFParser():
                       -1,  # self.phrase_Alele to complete
                       self.phrase_Pos,
                       self.phrase_Len,
-                      self.ACTGNtoInt(self.phrase_Edit),
+                      self.phrase_Edit,
                       self.phrase_PosEdit,
                       self.phrase_LenEdit]
         self.CustomAddToPhraseCache([tmp_phrase])
@@ -387,7 +387,7 @@ class VCFParser():
             if re.fullmatch(self.p_nucleotid_only, alt):  # If its an explicit edit
                 self.phrase_PosEdit = 0
                 self.phrase_LenEdit = 0
-                self.phrase_Edit = alt
+                self.phrase_Edit = self.ACTGNtoInt(alt)
 
                 self.AddToPhraseCache()  # Done
             elif "SVTYPE" in self.curr_Info.keys():  # If its an external reference edit, we should check the SVTYPE
