@@ -372,18 +372,30 @@ class VCFParser():
         tmp_phrase[5] = self.ACTGNtoInt(tmp_phrase[5])
         return tmp_phrase
 
+    def HasValidSTYPE(self):
+        if("SVTYPE" in self.curr_Info.keys()):
+            self.curr_SVTYPE = self.curr_Info.get("SVTYPE")
+            
+            return (self.curr_SVTYPE == "DEL" or
+                    self.curr_SVTYPE == "INV" or
+                    self.curr_SVTYPE == "CNV" or
+                    self.curr_SVTYPE == "DUP")
+        else:
+            return False
+
+
     def ProcessVariants(self):
 
         for alt in self.curr_AltList:
             self.curr_Alt = alt
+            
             if re.fullmatch(self.p_nucleotid_only, alt):  # If its an explicit edit
                 self.phrase_PosEdit = 0
                 self.phrase_LenEdit = 0
                 self.phrase_Edit = self.ACTGNtoInt(alt)
 
                 self.AddToPhraseCache()  # Done
-            elif "SVTYPE" in self.curr_Info.keys():  # If its an external reference edit, we should check the SVTYPE
-                self.curr_SVTYPE = self.curr_Info.get("SVTYPE")
+            elif self.HasValidSTYPE():  # If its an external reference edit, we should check the SVTYPE
 
                 if self.curr_SVTYPE == "DEL" or alt == "<CN0>":
                     self.GenerateDeletionPhraseCache()
@@ -450,7 +462,13 @@ class VCFParser():
                             continue
 
                         self.curr_AltIndex = self.curr_AleleList[j] - 1
-                        tmp_values_phrase = self.phrase_Cache[self.curr_AltIndex]
+
+                        try:
+                            tmp_values_phrase = self.phrase_Cache[self.curr_AltIndex]
+                        except:
+                            print(self.curr_AltIndex, len(self.phrase_Cache))
+                            exit(1)
+
 
                         #if self.isDebugMode: print("Phrases to be writed:", tmp_values_phrase)
 
