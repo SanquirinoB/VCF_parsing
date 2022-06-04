@@ -274,8 +274,7 @@ class VCFParser():
         return list_new_values, isShort
 
     def WritePhrase(self, list_values_phrase):
-        #if self.isDebugMode: 
-        print("Phrases to be writed: ", len(list_values_phrase))
+        #if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
         for values_phrase in list_values_phrase:
             self.phrase_struct.m_indv = values_phrase[0]
             self.phrase_struct.m_chrom = values_phrase[1]
