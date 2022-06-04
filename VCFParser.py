@@ -287,14 +287,6 @@ class VCFParser():
             self.phrase_struct.m_edit = values_phrase[5]
             self.phrase_struct.m_pos_e = values_phrase[6]
             self.phrase_struct.m_len_e = values_phrase[7]
-            # phrase = template.format(values_phrase[0],
-            #                          values_phrase[1],
-            #                          values_phrase[2],
-            #                          values_phrase[3],
-            #                          values_phrase[4],
-            #                          values_phrase[5],
-            #                          values_phrase[6],
-            #                          values_phrase[7])
 
             #if self.isDebugMode: print("Phrase to be writed: ", phrase)
 
