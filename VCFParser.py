@@ -66,7 +66,7 @@ class VCFParser():
         self.phrase_LenEdit = 0
 
         self.phrase_Cache = []
-
+        self.IsFirst = True
         self.phrase_struct = Phrase()
         self.meta_struct = MetaInfo()
 
@@ -298,6 +298,8 @@ class VCFParser():
             #phrase = phrase.encode("ascii")
             self.VCFParsed.write(bytearray(self.phrase_struct))
             self.n_phrases += 1
+            if self.IsFirst: print(values_phrase)
+        self.IsFirst = False
 
     def FindValidVariantLength(self):
 
@@ -448,6 +450,8 @@ class VCFParser():
             self.UpdateGenericPhraseValues()
 
             self.ProcessVariants()
+
+            if self.IsFirst: print(self.phrase_Cache)
 
             if self.valid_record:
                 # Over each sample
