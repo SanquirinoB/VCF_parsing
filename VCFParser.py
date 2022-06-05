@@ -545,15 +545,14 @@ class VCFParser():
             shutil.rmtree(metadata_folder)
         os.mkdir(metadata_folder)
 
+        file_name = "phrases"
+        path_fileParsed = os.path.join(
+            parsing_folder, file_name + ".tmprlz")
+            
         is_first_meta = True
         for path_file in self.path_file_list:
 
             # Get name and remove .vcf
-            file_name = path_file.split("/")[-1][:-4]
-
-            path_fileParsed = os.path.join(
-                parsing_folder, file_name + ".tmprlz")
-
             with open(path_file, mode="r") as aux_VCF, open(path_fileParsed, mode="wb+") as aux_VCFParsed:
 
                 # Save pointers
