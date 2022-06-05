@@ -526,12 +526,13 @@ class VCFParser():
 
         tmp_folder = os.path.join(self.path_destination, "Tmp")
         parsing_folder = os.path.join(tmp_folder, "Parsing")
-        metadata_folder = os.path.join(tmp_folder, "MetaData")
+        metadata_folder = os.path.join(tmp_folder, "Meta_data")
 
         if os.path.isdir(tmp_folder):
             shutil.rmtree(tmp_folder)
         os.mkdir(tmp_folder)
 
+        # TODO: Creo que estos dos ifs son innecesarios
         if os.path.isdir(parsing_folder):
             shutil.rmtree(parsing_folder)
         os.mkdir(parsing_folder)
