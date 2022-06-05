@@ -40,7 +40,8 @@ class VCFParser():
         self.MISS_AleleAlt = MISS_AleleAlt_Value
 
         self.n_droppedRecords = 0
-
+        self.size_VCFFiles_processed = 0
+        self.size_ParsingFile_generated = 0
         self.VCFParsed = None
 
         # Preference settings
@@ -66,7 +67,6 @@ class VCFParser():
         self.phrase_LenEdit = 0
 
         self.phrase_Cache = []
-        self.IsFirst = True
         self.phrase_struct = Phrase()
         self.meta_struct = MetaInfo()
 
@@ -298,8 +298,7 @@ class VCFParser():
             #phrase = phrase.encode("ascii")
             self.VCFParsed.write(bytearray(self.phrase_struct))
             self.n_phrases += 1
-            if self.IsFirst: print(values_phrase)
-        self.IsFirst = False
+            
 
     def FindValidVariantLength(self):
 
@@ -451,8 +450,6 @@ class VCFParser():
 
             self.ProcessVariants()
 
-            if self.IsFirst: print(self.phrase_Cache)
-
             if self.valid_record:
                 # Over each sample
                 for i in range(self.n_samples):
@@ -515,10 +512,12 @@ class VCFParser():
             self.TMPRLZ.write(aux_line.encode("ascii"))
 
     def ReportEndProcess(self):
-        print("---- RESUME META ----")
-        print("\tCurr n_samples:", self.n_samples)
-        print("\tNumber of dropped records:", self.n_droppedRecords)
-        print("\tNumber of phrases:", self.n_phrases)
+        print("[RLZ] Resume parsing process:")
+        print("[RLZ]\tNumber of samples identified:", self.n_samples)
+        print("[RLZ]\tNumber of dropped records:", self.n_droppedRecords)
+        print("[RLZ]\tNumber of valid edits captured:", self.n_phrases)
+        print("[RLZ]\tFile size processed:", self.size_VCFFiles_processed / (1024 * 1024), "MB")
+        print("[RLZ]\tSize of parsed file generated:", self.size_ParsingFile_generated / (1024 * 1024), "MB")
 
         if self.isDebugMode:
             print("\tCurr IDs:", self.ID_samples)
@@ -551,7 +550,8 @@ class VCFParser():
             
         is_first_meta = True
         for path_file in self.path_file_list:
-
+            file_stats = os.stat(path_file)
+            self.size_VCFFiles_processed += file_stats.st_size
             # Get name and remove .vcf
             with open(path_file, mode="r") as aux_VCF, open(path_fileParsed, mode="wb+") as aux_VCFParsed:
 
@@ -566,6 +566,8 @@ class VCFParser():
                 # Interpretate edits
                 self.ProcessRECORDS()
 
+        file_stats = os.stat(path_fileParsed)
+        self.size_ParsingFile_generated = file_stats.st_size
         self.ReportEndProcess()
 
         path_ID_info = os.path.join(metadata_folder, "ID_info.metarlz")
