@@ -21,7 +21,7 @@ class Phrase(ctypes.Structure):
                ("m_len_e", ctypes.c_uint)]
 
 class MetaInfo(ctypes.Structure):
-    _fields_ = [("m_nPhrases", ctypes.c_ushort)] # Por ahora, puede ser mas
+    _fields_ = [("m_nPhrases", ctypes.c_uint)] # Por ahora, puede ser mas
             #    ("m_ID", ctypes.c_char * 30),
             #    ("m_relPosRef", ctypes.c_uint)]        
 
