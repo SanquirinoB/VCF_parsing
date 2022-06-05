@@ -4,14 +4,14 @@
 from VCFParser import VCFParser
 import sys
 
-if __name__ == "__main__":
-    # argv = [codigo, destino, -n, paths, ... , param2, ...]
-
+def main():
     if sys.argv[2] == "-n":
         # TODO: Ahora asumimos que todo correcto no mas
         # (self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value = 0, LeaveUnphasedAsPhased = True, 
         # DiscardNotPASSRecords = True, debug = False):
         parser = VCFParser(sys.argv[1], sys.argv[- int(sys.argv[3]):], 0, True, True, False)
+        parser.StartParsing()
+        return 0
     else:
         # TODO usar https://docs.python.org/3/library/argparse.html
         exp = """
@@ -23,6 +23,11 @@ if __name__ == "__main__":
             \t-f=[STR]... :\n
             """
         print(exp)
-        exit(1)
+        return 1
 
-    parser.StartParsing()
+    
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+    
