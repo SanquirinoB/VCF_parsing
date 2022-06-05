@@ -20,6 +20,10 @@ class Phrase(ctypes.Structure):
                ("m_len", ctypes.c_uint),
                ("m_len_e", ctypes.c_uint)]
 
+class MetaInfo(ctypes.Structure):
+    _fields_ = [("m_nPhrases", ctypes.c_ushort)] # Por ahora, puede ser mas
+            #    ("m_ID", ctypes.c_char * 30),
+            #    ("m_relPosRef", ctypes.c_uint)]        
 
 
 class VCFParser():
@@ -64,6 +68,7 @@ class VCFParser():
         self.phrase_Cache = []
 
         self.phrase_struct = Phrase()
+        self.meta_struct = MetaInfo()
 
         # Variables for VCF metadata processing
         self.meta_ReferenceValues = OrderedDict()
@@ -482,11 +487,12 @@ class VCFParser():
 
             raw_record = self.VCF.readline()
 
-    def GenerateRLZResume(self):
+    def GenerateMetaInfoResume(self):
         # Number of phrases (int)
-        aux_line = "{}\r\n".format(self.n_phrases)
-        self.TMPRLZ.write(aux_line.encode("ascii"))
+        self.meta_struct.m_nPhrases = self.n_phrases
+        self.TMPRLZ.write(bytearray(self.meta_struct))
 
+    def GenerateRLZResume(self):
         # Number of contigs (int)
         aux_line = "{}\r\n".format(self.counter_contig)
         self.TMPRLZ.write(aux_line.encode("ascii"))
@@ -505,10 +511,12 @@ class VCFParser():
             self.TMPRLZ.write(aux_line.encode("ascii"))
 
     def ReportEndProcess(self):
-        print("Number of dropped records:", self.n_droppedRecords)
+        print("---- RESUME META ----")
+        print("\tCurr n_samples:", self.n_samples)
+        print("\tNumber of dropped records:", self.n_droppedRecords)
+        print("\tNumber of phrases:", self.n_phrases)
+
         if self.isDebugMode:
-            print("---- RESUME META ----")
-            print("\tCurr n_samples:", self.n_samples)
             print("\tCurr IDs:", self.ID_samples)
             print("\tMeta reference values:", self.meta_ReferenceValues)
             print("\tReference length:", self.Length_Reference)
@@ -556,7 +564,12 @@ class VCFParser():
 
         self.ReportEndProcess()
 
-        path_resume = os.path.join(metadata_folder, "Resume.metarlz")
-        with open(path_resume, mode="wb") as aux_TMPRLZ:
+        path_ID_info = os.path.join(metadata_folder, "ID_info.metarlz")
+        path_meta_info = os.path.join(metadata_folder, "Meta_info.metarlz")
+        with open(path_ID_info, mode="wb") as aux_TMPRLZ:
             self.TMPRLZ = aux_TMPRLZ
             self.GenerateRLZResume()
+        
+        with open(path_meta_info, mode="wb") as aux_TMPRLZ:
+            self.TMPRLZ = aux_TMPRLZ
+            self.GenerateMetaInfoResume()
