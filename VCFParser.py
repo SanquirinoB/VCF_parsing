@@ -52,7 +52,7 @@ class VCFParser():
         self.p_nucleotid_only = re.compile(r"[ACTGN]+")
         self.p_cnv_record = re.compile(
             r"<CN[1-9][0-9]*>")  # => <CNi> where i >= 1
-        self.valid_record = True
+        self.is_valid_record = True
 
         # Phrase base structure
         # Everything related to indexes will be fixed for start at 0
@@ -65,6 +65,8 @@ class VCFParser():
         self.phrase_Edit = 0
         self.phrase_PosEdit = 0
         self.phrase_LenEdit = 0
+
+        self.n_print = 50
 
         self.phrase_Cache = []
         self.phrase_struct = Phrase()
@@ -193,8 +195,8 @@ class VCFParser():
         self.curr_REF = record[3]
         self.curr_AltList = record[4].split(',')
 
-        if self.isDebugMode:
-            print("Current AltList: ", self.curr_AltList)
+        # if self.isDebugMode:
+        #     print("Current AltList: ", self.curr_AltList)
 
         self.ProcessINFO(record[7])
         self.ProcessFORMAT(record[8])
@@ -218,17 +220,8 @@ class VCFParser():
         self.curr_AleleList = [
             int(x) if x != "." else self.MISS_AleleAlt for x in self.curr_AleleList]
 
-        if self.isDebugMode:
-            print("CurrAleleList is:", self.curr_AleleList)
-
-    def toStdString(self, string, size):
-        if len(string) <= size:
-            return '0'*(size - len(string)) + string
-        else:
-            # TODO:  de donde sale? [WritePhrase] ERROR: Values in VCF are higher than expected. Value = 4581430570
-            print(
-                "[WritePhrase] ERROR: Values in VCF are higher than expected. Value = {}".format(string))
-            exit(1)
+        # if self.isDebugMode:
+        #     print("CurrAleleList is:", self.curr_AleleList)
 
     def ACTGNtoInt(self, value):
         if type(value) == int:
@@ -239,51 +232,10 @@ class VCFParser():
 
             return int(value)
 
-    def Standarize(self, values_phrase):
-        list_new_values = []
-        isShort = (values_phrase[6] == 0)
-        new_values = ["" for _ in range(8)]
-
-        if isShort:
-            new_values[6] = "0"
-        else:
-            # 6 pose_e 9 char
-            new_values[6] = self.toStdString(str(values_phrase[6]), 10)
-            # 7 len_e 6 char
-            new_values[7] = self.toStdString(str(values_phrase[7]), 6)
-
-        # 0 indv 4 char
-        new_values[0] = self.toStdString(str(values_phrase[0]), 4)
-        # 1 chrom 3 char
-        new_values[1] = self.toStdString(str(values_phrase[1]), 3)
-        # 2 alele 2 char
-        new_values[2] = self.toStdString(str(values_phrase[2]), 2)
-        # 3 pos 9 char
-        new_values[3] = self.toStdString(str(values_phrase[3]), 10)
-        # 4 len 6 char
-        new_values[4] = self.toStdString(str(values_phrase[4]), 6)
-        # 5 edit 4 char
-        tmp = values_phrase[5]
-
-        if(len(tmp) > 4):
-            # chop in blocks of 4
-            while len(tmp) > 4:
-                new_values[5] = tmp[:4]
-                list_new_values.append(new_values)
-                tmp = tmp[4:]
-            # if remains, save it
-            if(len(tmp) > 0):
-                new_values[5] = self.toStdString(tmp, 4)
-                list_new_values.append(new_values)
-        else:
-            new_values[5] = self.toStdString(tmp, 4)
-            list_new_values.append(new_values)
-
-        return list_new_values, isShort
-
     def WritePhrase(self, list_values_phrase):
         #if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
         for values_phrase in list_values_phrase:
+            if self.n_print > 0: print(values_phrase)
             self.phrase_struct.m_indv = values_phrase[0]
             self.phrase_struct.m_chrom = values_phrase[1]
             self.phrase_struct.m_alele = values_phrase[2]
@@ -298,6 +250,8 @@ class VCFParser():
             #phrase = phrase.encode("ascii")
             self.VCFParsed.write(bytearray(self.phrase_struct))
             self.n_phrases += 1
+
+            self.n_print -= 1
             
 
     def FindValidVariantLength(self):
@@ -417,7 +371,7 @@ class VCFParser():
                 if self.isDebugMode:
                     print("(!) Edit no canonico descartado.")
                 self.n_droppedRecords += 1
-                self.valid_record = False
+                self.is_valid_record = False
 
         if self.isDebugMode:
             print("Edits obtained: ", len(self.phrase_Cache),
@@ -450,11 +404,12 @@ class VCFParser():
 
             self.ProcessVariants()
 
-            if self.valid_record:
+            if self.is_valid_record:
+                if self.n_print > 0: print("Variante:\n", self.phrase_Cache)
                 # Over each sample
                 for i in range(self.n_samples):
-                    if self.isDebugMode:
-                        print("For sample ", self.ID_samples.get(i))
+                    # if self.isDebugMode:
+                    #     print("For sample ", self.ID_samples.get(i))
                     # Set internal id
                     self.phrase_INDV = i
 
@@ -469,12 +424,7 @@ class VCFParser():
 
                         self.curr_AltIndex = self.curr_AleleList[j] - 1
 
-                        try:
-                            tmp_values_phrase = self.phrase_Cache[self.curr_AltIndex]
-                        except:
-                            print(self.curr_AltIndex, len(self.phrase_Cache))
-                            exit(1)
-
+                        tmp_values_phrase = self.phrase_Cache[self.curr_AltIndex]
 
                         #if self.isDebugMode: print("Phrases to be writed:", tmp_values_phrase)
 
@@ -484,7 +434,7 @@ class VCFParser():
 
                         self.WritePhrase(tmp_values_phrase)
             else:
-                self.valid_record = True
+                self.is_valid_record = True
 
             raw_record = self.VCF.readline()
 
