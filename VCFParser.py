@@ -499,15 +499,16 @@ class VCFParser():
             parsing_folder, file_name + ".tmprlz")
             
         is_first_meta = True
+        self.VCFParsed = open(path_fileParsed, mode="wb")
+
         for path_file in self.path_file_list:
             file_stats = os.stat(path_file)
             self.size_VCFFiles_processed += file_stats.st_size
             # Get name and remove .vcf
-            with open(path_file, mode="r") as aux_VCF, open(path_fileParsed, mode="wb+") as aux_VCFParsed:
+            with open(path_file, mode="r") as aux_VCF:
 
                 # Save pointers
                 self.VCF = aux_VCF
-                self.VCFParsed = aux_VCFParsed
 
                 # Collect VCF metainformation
                 self.ProcessMETA(keep_meta=is_first_meta)
@@ -516,6 +517,7 @@ class VCFParser():
                 # Interpretate edits
                 self.ProcessRECORDS()
 
+        self.VCFParsed.close()
         file_stats = os.stat(path_fileParsed)
         self.size_ParsingFile_generated = file_stats.st_size
         self.ReportEndProcess()
