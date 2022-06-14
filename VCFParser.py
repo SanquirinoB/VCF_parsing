@@ -202,8 +202,9 @@ class VCFParser():
         self.ProcessFORMAT(record[8])
 
     def UpdateGenericPhraseValues(self):
+        curr_Ref_data = self.meta_ReferenceValues.get(self.curr_Chrom)
         self.phrase_Chrom = int(self.curr_Chrom)
-        self.phrase_Pos = self.curr_Pos
+        self.phrase_Pos = curr_Ref_data.get("relPosRef") + self.curr_Pos
         self.phrase_Len = len(self.curr_REF)
 
     def UpdateAlelesList(self, INDVRecord):
