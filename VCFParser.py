@@ -95,8 +95,6 @@ class VCFParser():
 
         self.alphabet_replace = [["A", "1"], [
             "C", "2"], ["T", "3"], ["G", "4"], ["N", "5"]]
-        # {"0": 0b0000, "1": 0b0001, "2": 0b0010, "3": 0b0011, "4": 0b0100, "5": 0b0101, "6": 0b0110, "7": 0b0111,
-        #                "8": 0b1000, "9": 0b1001, "A" : 0b1010, "C": 0b1011, "T": 0b1100, "G": 0b1101, "X": }
 
     def ReferenceIndexTransform(self, index):
         return (2 * self.Length_Reference) - index - 1
