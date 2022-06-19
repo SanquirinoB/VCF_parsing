@@ -34,10 +34,7 @@ class ReferenceProcessor():
     def IsDescriptionLine(self, line):
         return line[0] == ">"
 
-    def ProcessDescriptionLine(self, description_line):
-        description_line = description_line[1:] # Remove ">" of the begining
-        elements = description_line.split(" ")
-
+    def GenerateCaracterization(self):
         # Is mandatory that the first element will be the id
         self.current_ref_data["ID"] = self.n_refs
         self.current_ref_data["n_bases"] = 0
@@ -75,7 +72,8 @@ class ReferenceProcessor():
                     self.SaveRefData()
 
                 self.checkpoint_refs_len = self.refs_len
-                self.ProcessDescriptionLine(line)
+                print(line)
+                self.GenerateCaracterization()
                 start_checking = True
             else:
                 self.current_ref_data["n_bases"] += len(line)
@@ -85,6 +83,7 @@ class ReferenceProcessor():
         self.meta_file.close()
 
     def GetLargos(self):
+        print(len(self.largos), self.largos)
         return self.largos
 
 
