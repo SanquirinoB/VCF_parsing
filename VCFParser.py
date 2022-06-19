@@ -109,6 +109,7 @@ class VCFParser():
                             dict_aux["relPosRef"] = self.Length_Reference
                             self.Length_Reference += int(pair[1])
                             # TODO: Solo es chequeo
+                            print(int(pair[1]), self.reference_processor.GetLargos()[self.counter_contig])
                             assert int(pair[1]) == self.reference_processor.GetLargos()[self.counter_contig]
                             continue
 

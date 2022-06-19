@@ -73,7 +73,7 @@ class ReferenceProcessor():
 
                     self.checkpoint_refs_len = self.refs_len
                     print(line)
-                    self.GenerateCaracterization()
+                    self.GenerateCharacterization()
                     start_checking = True
                 else:
                     self.current_ref_data["n_bases"] += len(line)
