@@ -49,7 +49,7 @@ class VCFParser():
         self.phrase_PosEdit = 0
         self.phrase_LenEdit = 0
 
-        self.n_print = 50
+        self.n_print = 0
 
         self.phrase_Cache = []
         self.phrase_struct = Phrase()
@@ -84,50 +84,48 @@ class VCFParser():
         # The first line readed is the VCF Version
         # TODO: Querremos procesar esto? Quiza crear un assert de version
         line = self.VCF.readline()[:-1]
-        pair, dict_aux = [], {}
+
         # The last line allowed will be just before header line
         while line[:2] == "##":
-            if keep_meta:
-                searching_length = True
-                # line = "##contig=<ID=GL000224.1,assembly=b37,length=179693>\n"
-                if line[:9] == "##contig=":
-                        # If the info is not provided, we get it from the reference
-                    # if not ("length" in line):  # This value is not mandatory, so just in case
-                    #     size = pre_computed_lengths[self.counter_contig]
-                    #     dict_aux["relPosRef"] = self.Length_Reference
-                    #     self.Length_Reference += size
-                    #     dict_aux["length"] = size
-                    #     searching_length = False
+            #if keep_meta:
+            #     searching_length = True
+            #     # line = "##contig=<ID=GL000224.1,assembly=b37,length=179693>\n"
+            #     if line[:9] == "##contig=":
+            #             # If the info is not provided, we get it from the reference
+            #         # if not ("length" in line):  # This value is not mandatory, so just in case
+            #         #     size = pre_computed_lengths[self.counter_contig]
+            #         #     dict_aux["relPosRef"] = self.Length_Reference
+            #         #     self.Length_Reference += size
+            #         #     dict_aux["length"] = size
+            #         #     searching_length = False
               
-                    # If it is, we collect it from here
-                    # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"
-                    for x in line[10:-1].split(","):
-                        pair = x.split("=")
+            #         # If it is, we collect it from here
+            #         # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"
+            #         for x in line[10:-1].split(","):
+            #             pair = x.split("=")
 
-                        if searching_length and pair[0] == "length":  # Necessary for invertion calculus
-                            dict_aux["relPosRef"] = self.Length_Reference
-                            self.Length_Reference += int(pair[1])
-                            continue
+            #             if searching_length and pair[0] == "length":  # Necessary for invertion calculus
+            #                 dict_aux["relPosRef"] = self.Length_Reference
+            #                 self.Length_Reference += int(pair[1])
 
-                        dict_aux[pair[0]] = pair[1]
+            #             dict_aux[pair[0]] = pair[1]
 
-                    # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
-                    ID = dict_aux.get("ID")
-                    # Set ID to a shorter internal value as new ID
-                    dict_aux["internalID"] = self.counter_contig
-                    self.counter_contig += 1
+            #         # = {'ID': 'GL000224.1', 'assembly': 'b37', 'length': '179693'}
+            #         ID = dict_aux.get("ID")
+            #         # Set ID to a shorter internal value as new ID
+            #         dict_aux["internalID"] = self.counter_contig
+            #         self.counter_contig += 1
 
-                    # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
-                    self.meta_ReferenceValues[ID] = dict_aux.copy()
-                    dict_aux.clear()
+            #         # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
+            #         self.meta_ReferenceValues[ID] = dict_aux.copy()
+            #         dict_aux.clear()
 
-            print(self.meta_ReferenceValues)
-            print(self.reference_processor.GetReferenceData())
+            # print(self.meta_ReferenceValues)
+            # print(self.reference_processor.GetReferenceData())
 
             # TODO: The rest of the lines
-            line = self.VCF.readline()[:-1]
-            searching_length = True
-
+            line = self.VCF.readline()
+        self.meta_ReferenceValues = self.reference_processor.GetReferenceData()
         # This last line its supposed to be the header line
         tmp_ID_samples = line.split("\t")[9:]
         self.n_samples = len(tmp_ID_samples)

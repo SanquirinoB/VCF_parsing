@@ -50,11 +50,14 @@ class ReferenceProcessor():
         self.meta_file.write(bytearray(self.meta_structure))
 
         # For parsing use
+        # ('Y', {'length': '59373566', 'assembly': 'b37', 'relPosRef': 3042602996, 'internalID': 84, 'ID': 'Y'})
         dict_aux = {}
         dict_aux["ID"] = self.current_ref_data["ID"]
+        dict_aux["internal_ID"] = self.current_ref_data["internal_ID"]
         dict_aux["length"] = self.current_ref_data["n_bases"]
+        dict_aux["relPosRef"] = self.checkpoint_refs_len
 
-        self.reference_data[self.current_ref_data["internal_ID"]] = dict_aux.copy()       
+        self.reference_data[self.current_ref_data["ID"]] = dict_aux.copy()       
 
 
     def StartReferenceProcessing(self):
