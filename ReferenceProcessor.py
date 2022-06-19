@@ -66,7 +66,6 @@ class ReferenceProcessor():
             line = raw_reference.readline().rstrip()
             while line:
                 if(self.IsDescriptionLine(line)):
-                    print("Es descripcion")
                     # Before we start to check a new ref, we need to ensure all info read before was correct
                     if(start_checking):
                         assert (self.refs_len - self.checkpoint_refs_len) == self.current_ref_data["n_bases"]
@@ -77,7 +76,6 @@ class ReferenceProcessor():
                     self.GenerateCaracterization()
                     start_checking = True
                 else:
-                    print("Es data")
                     self.current_ref_data["n_bases"] += len(line)
                     self.refs_len += len(line)
                     processed_reference.write(line)
