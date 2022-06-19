@@ -26,6 +26,7 @@ class ReferenceProcessor():
         # Helper variables
         self.meta_structure = MetaRef()
         self.current_ref_data = {}
+        self.reference_data = {}
         self.checkpoint_refs_len = 0
 
         self.raw_ref_file = None
@@ -34,18 +35,26 @@ class ReferenceProcessor():
     def IsDescriptionLine(self, line):
         return line[0] == ">"
 
-    def GenerateCharacterization(self):
+    def GenerateCharacterization(self, line):
+        values = line[1:].split(" ")
         # Is mandatory that the first element will be the id
-        self.current_ref_data["ID"] = self.n_refs
+        self.current_ref_data["ID"] = values[0]
+        self.current_ref_data["internal_ID"] = self.n_refs
         self.current_ref_data["n_bases"] = 0
         self.n_refs += 1
 
     def SaveRefData(self):
-        self.meta_structure.m_ID = self.n_refs
+        self.meta_structure.m_ID = self.current_ref_data["internal_ID"]
         self.meta_structure.m_nBases = self.current_ref_data["n_bases"]
-        self.largos.append(self.current_ref_data["n_bases"])
         self.meta_structure.m_relPos = self.checkpoint_refs_len
         self.meta_file.write(bytearray(self.meta_structure))
+
+        # For parsing use
+        dict_aux = {}
+        dict_aux["ID"] = self.current_ref_data["ID"]
+        dict_aux["length"] = self.current_ref_data["n_bases"]
+
+        self.reference_data[self.current_ref_data["internal_ID"]] = dict_aux.copy()       
 
 
     def StartReferenceProcessing(self):
@@ -73,7 +82,7 @@ class ReferenceProcessor():
 
                     self.checkpoint_refs_len = self.refs_len
                     print(line)
-                    self.GenerateCharacterization()
+                    self.GenerateCharacterization(line)
                     start_checking = True
                 else:
                     self.current_ref_data["n_bases"] += len(line)
@@ -84,9 +93,8 @@ class ReferenceProcessor():
 
         self.meta_file.close()
 
-    def GetLargos(self):
-        print(len(self.largos), self.largos)
-        return self.largos
+    def GetReferenceData(self):
+        return self.reference_data
 
 
             

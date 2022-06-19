@@ -85,7 +85,7 @@ class VCFParser():
         # TODO: Querremos procesar esto? Quiza crear un assert de version
         line = self.VCF.readline()[:-1]
         pair, dict_aux = [], {}
-
+        pre_computed_lengths = self.reference_processor.GetLargos()
         # The last line allowed will be just before header line
         while line[:2] == "##":
             if keep_meta:
@@ -93,12 +93,12 @@ class VCFParser():
                 # line = "##contig=<ID=GL000224.1,assembly=b37,length=179693>\n"
                 if line[:9] == "##contig=":
                         # If the info is not provided, we get it from the reference
-                    if not ("length" in line):  # This value is not mandatory, so just in case
-                        size = self.reference_processor.GetLargos()[self.counter_contig]
-                        dict_aux["relPosRef"] = self.Length_Reference
-                        self.Length_Reference += size
-                        dict_aux["length"] = size
-                        searching_length = False
+                    # if not ("length" in line):  # This value is not mandatory, so just in case
+                    #     size = pre_computed_lengths[self.counter_contig]
+                    #     dict_aux["relPosRef"] = self.Length_Reference
+                    #     self.Length_Reference += size
+                    #     dict_aux["length"] = size
+                    #     searching_length = False
               
                     # If it is, we collect it from here
                     # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"
@@ -108,9 +108,6 @@ class VCFParser():
                         if searching_length and pair[0] == "length":  # Necessary for invertion calculus
                             dict_aux["relPosRef"] = self.Length_Reference
                             self.Length_Reference += int(pair[1])
-                            # TODO: Solo es chequeo
-                            print(int(pair[1]), self.reference_processor.GetLargos()[self.counter_contig])
-                            assert int(pair[1]) == self.reference_processor.GetLargos()[self.counter_contig]
                             continue
 
                         dict_aux[pair[0]] = pair[1]
@@ -124,6 +121,9 @@ class VCFParser():
                     # = {'GL000224.1': {'ID': 1,'assembly': 'b37', 'length': '179693'}}
                     self.meta_ReferenceValues[ID] = dict_aux.copy()
                     dict_aux.clear()
+
+            print(self.meta_ReferenceValues)
+            print(self.reference_processor.GetReferenceData())
 
             # TODO: The rest of the lines
             line = self.VCF.readline()[:-1]
