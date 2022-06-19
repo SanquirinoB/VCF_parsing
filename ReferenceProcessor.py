@@ -1,15 +1,18 @@
 from itertools import permutations
-from operator import truediv
+from Structures import MetaRef
 import os
 import shutil
 
 class ReferenceProcessor():
-    def __init__(self, _n_refs, _refs_len, _bases_to_perm_include, _raw_reference_path, _destination_folder):
+    def __init__(self, _raw_reference_path, _destination_folder):
         # First parameters
-        self.n_refs = _n_refs
-        self.refs_len = _refs_len
-        self.bases_to_include = _bases_to_perm_include
+        self.n_refs = 0
+        self.refs_len = 0
+        self.bases_to_include = "ACTGN"
         self.raw_reference_path = _raw_reference_path
+
+        # DEBUG
+        self.largos = []
 
         # We asume that VCFParser is excecuted first
         tmp_folder = os.path.join(_destination_folder, "Tmp")
@@ -21,30 +24,68 @@ class ReferenceProcessor():
         assert os.path.isdir(self.metadata_folder)
 
         # Helper variables
-        self.current_ref_has_lenght = False
+        self.meta_structure = MetaRef()
         self.current_ref_data = {}
+        self.checkpoint_refs_len = 0
+
+        self.raw_ref_file = None
+        self.meta_file = None
+
+    def IsDescriptionLine(self, line):
+        return line[0] == ">"
 
     def ProcessDescriptionLine(self, description_line):
         description_line = description_line[1:] # Remove ">" of the begining
         elements = description_line.split(" ")
+
         # Is mandatory that the first element will be the id
-        self.current_ref_data["ID"] = elements[0]
-        # Util description not always appear :(
-        if len(elements) > 1:
-            for element in elements[1:]:
-                
+        self.current_ref_data["ID"] = self.n_refs
+        self.current_ref_data["n_bases"] = 0
+        self.n_refs += 1
+
+    def SaveRefData(self):
+        self.meta_structure.m_ID = self.n_refs
+        self.meta_structure.m_nBases = self.current_ref_data["n_bases"]
+        self.largos.append(self.current_ref_data["n_bases"])
+        self.meta_structure.m_relPos = self.checkpoint_refs_len
+        self.meta_file.write(bytearray(self.meta_structure))
 
 
     def StartReferenceProcessing(self):
+        # Get propper paths
         processed_ref_file_path = os.path.join(self.parsing_folder, "Reference.tmprlz")
         metadata_file_path = os.path.join(self.metadata_folder, "Reference.metarlz")
-        
-        is_first_time = True
-        has_length = False
-        description_line = ""
-        with open(self.raw_reference_path, 'r') as raw_reference, open(processed_ref_file_path, 'wb') as processed_reference, open(metadata_file_path, 'wb') as metadata:
+
+        # Open metadata file for refs info
+        self.meta_file = open(metadata_file_path, 'wb')
+
+        # Before we process the first ref, we start to check if all the values are correct
+        start_checking = False
+        self.checkpoint_refs_len = 0
+
+        # Start processing
+        with open(self.raw_reference_path, 'r') as raw_reference, open(processed_ref_file_path, 'wb') as processed_reference:
             # First we read the first line of the ref, which should be like >1 dna:chromosome chromosome:GRCh37:1:1:249250621:1\n
-            description_line = raw_reference.readline()
+            line = raw_reference.readline().rstrip()
+
+            if(self.IsDescriptionLine(line)):
+                # Before we start to check a new ref, we need to ensure all info read before was correct
+                if(start_checking):
+                    assert (self.refs_len - self.checkpoint_refs_len) == self.current_ref_data["n_bases"]
+                    self.SaveRefData()
+
+                self.checkpoint_refs_len = self.refs_len
+                self.ProcessDescriptionLine(line)
+                start_checking = True
+            else:
+                self.current_ref_data["n_bases"] += len(line)
+                self.refs_len += len(line)
+                processed_reference.write(line)
+
+        self.meta_file.close()
+
+    def GetLargos(self):
+        return self.largos
 
 
             

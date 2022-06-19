@@ -5,29 +5,12 @@ import re
 import os
 import shutil
 from collections import OrderedDict
-import ctypes
-
-# Last stable checked version f154f8f60e1b34327eb65374e13b2ee77410f647
-
-
-class Phrase(ctypes.Structure):
-    _fields_ = [("m_indv", ctypes.c_ushort),
-               ("m_chrom", ctypes.c_ushort),
-               ("m_alele", ctypes.c_ushort),
-               ("m_pos", ctypes.c_uint),
-               ("m_pos_e", ctypes.c_uint),
-               ("m_edit", ctypes.c_ushort),
-               ("m_len", ctypes.c_uint),
-               ("m_len_e", ctypes.c_uint)]
-
-class MetaInfo(ctypes.Structure):
-    _fields_ = [("m_nPhrases", ctypes.c_uint)] # Por ahora, puede ser mas
-            #    ("m_ID", ctypes.c_char * 30),
-            #    ("m_relPosRef", ctypes.c_uint)]        
+from Structures import Phrase, MetaInfo
+from ReferenceProcessor import ReferenceProcessor
 
 
 class VCFParser():
-    def __init__(self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value=0, LeaveUnphasedAsPhased=True,
+    def __init__(self, Destination_folder, Reference_path, VCF_path_list, MISS_AleleAlt_Value=0, LeaveUnphasedAsPhased=True,
                  DiscardNotPASSRecords=True, debug=False):
         # Debug
         self.isDebugMode = debug
@@ -79,15 +62,13 @@ class VCFParser():
         self.n_samples = 0
         self.Length_Reference = 0
         self.n_phrases = 0
+        self.reference_processor = ReferenceProcessor(Reference_path, Destination_folder)
 
         # Variables for VCF record processing
         self.curr_Chrom = ""
         self.curr_Pos = 0
-        #self.curr_ID = "X"
         self.curr_REF = "X"
         self.curr_AltIndex = 0
-        #self.curr_Qual = "X"
-        #self.curr_Filter = "X"
         self.curr_Info = {}
         self.curr_Format = {}
         self.curr_AleleList = []
@@ -108,21 +89,27 @@ class VCFParser():
         # The last line allowed will be just before header line
         while line[:2] == "##":
             if keep_meta:
+                searching_length = True
                 # line = "##contig=<ID=GL000224.1,assembly=b37,length=179693>\n"
                 if line[:9] == "##contig=":
-
+                        # If the info is not provided, we get it from the reference
                     if not ("length" in line):  # This value is not mandatory, so just in case
-                        # TODO: Debemos recuperar el archivo de referencia y recuperar el largo
-                        # de los strings
-                        print("Oh no")
-
+                        size = self.reference_processor.GetLargos()[self.counter_contig]
+                        dict_aux["relPosRef"] = self.Length_Reference
+                        self.Length_Reference += size
+                        dict_aux["length"] = size
+                        searching_length = False
+              
+                    # If it is, we collect it from here
                     # line[10:-1] = "ID=GL000224.1,assembly=b37,length=179693"
                     for x in line[10:-1].split(","):
                         pair = x.split("=")
 
-                        if pair[0] == "length":  # Necessary for invertion calculus
+                        if searching_length and pair[0] == "length":  # Necessary for invertion calculus
                             dict_aux["relPosRef"] = self.Length_Reference
                             self.Length_Reference += int(pair[1])
+                            # TODO: Solo es chequeo
+                            assert int(pair[1]) == self.reference_processor.GetLargos()[self.counter_contig]
                             continue
 
                         dict_aux[pair[0]] = pair[1]
@@ -139,6 +126,7 @@ class VCFParser():
 
             # TODO: The rest of the lines
             line = self.VCF.readline()[:-1]
+            searching_length = True
 
         # This last line its supposed to be the header line
         tmp_ID_samples = line.split("\t")[9:]
@@ -499,6 +487,8 @@ class VCFParser():
             
         is_first_meta = True
         self.VCFParsed = open(path_fileParsed, mode="wb")
+
+        self.reference_processor.StartReferenceProcessing()
 
         for path_file in self.path_file_list:
             file_stats = os.stat(path_file)
