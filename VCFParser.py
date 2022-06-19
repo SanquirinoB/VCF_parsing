@@ -85,7 +85,6 @@ class VCFParser():
         # TODO: Querremos procesar esto? Quiza crear un assert de version
         line = self.VCF.readline()[:-1]
         pair, dict_aux = [], {}
-        pre_computed_lengths = self.reference_processor.GetLargos()
         # The last line allowed will be just before header line
         while line[:2] == "##":
             if keep_meta:
