@@ -9,7 +9,7 @@ def main():
         # TODO: Ahora asumimos que todo correcto no mas
         # (self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value = 0, LeaveUnphasedAsPhased = True, 
         # DiscardNotPASSRecords = True, debug = False):
-        parser = VCFParser(sys.argv[1], sys.argv[- int(sys.argv[3]):], 0, True, True, False)
+        parser = VCFParser(sys.argv[1], sys.argv[2], sys.argv[- int(sys.argv[4]):], 0, True, True, False)
         parser.StartParsing()
         return 0
     else:
