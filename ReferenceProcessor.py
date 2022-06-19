@@ -61,7 +61,7 @@ class ReferenceProcessor():
         self.checkpoint_refs_len = 0
 
         # Start processing
-        with open(self.raw_reference_path, 'r') as raw_reference, open(processed_ref_file_path, 'wb') as processed_reference:
+        with open(self.raw_reference_path, 'r') as raw_reference, open(processed_ref_file_path, 'w') as processed_reference:
             # First we read the first line of the ref, which should be like >1 dna:chromosome chromosome:GRCh37:1:1:249250621:1\n
             line = raw_reference.readline().rstrip()
             while line:
