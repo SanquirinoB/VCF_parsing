@@ -5,7 +5,7 @@ from VCFParser import VCFParser
 import sys
 
 def main():
-    if sys.argv[2] == "-n":
+    if sys.argv[3] == "-n":
         # TODO: Ahora asumimos que todo correcto no mas
         # (self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value = 0, LeaveUnphasedAsPhased = True, 
         # DiscardNotPASSRecords = True, debug = False):
