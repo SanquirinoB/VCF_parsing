@@ -34,7 +34,7 @@ class ReferenceProcessor():
     def IsDescriptionLine(self, line):
         return line[0] == ">"
 
-    def GenerateCaracterization(self):
+    def GenerateCharacterization(self):
         # Is mandatory that the first element will be the id
         self.current_ref_data["ID"] = self.n_refs
         self.current_ref_data["n_bases"] = 0
