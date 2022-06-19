@@ -64,23 +64,24 @@ class ReferenceProcessor():
         with open(self.raw_reference_path, 'r') as raw_reference, open(processed_ref_file_path, 'wb') as processed_reference:
             # First we read the first line of the ref, which should be like >1 dna:chromosome chromosome:GRCh37:1:1:249250621:1\n
             line = raw_reference.readline().rstrip()
-            print(line)
-            if(self.IsDescriptionLine(line)):
-                print("Es descripcion")
-                # Before we start to check a new ref, we need to ensure all info read before was correct
-                if(start_checking):
-                    assert (self.refs_len - self.checkpoint_refs_len) == self.current_ref_data["n_bases"]
-                    self.SaveRefData()
+            while line:
+                if(self.IsDescriptionLine(line)):
+                    print("Es descripcion")
+                    # Before we start to check a new ref, we need to ensure all info read before was correct
+                    if(start_checking):
+                        assert (self.refs_len - self.checkpoint_refs_len) == self.current_ref_data["n_bases"]
+                        self.SaveRefData()
 
-                self.checkpoint_refs_len = self.refs_len
-                print(line)
-                self.GenerateCaracterization()
-                start_checking = True
-            else:
-                print("Es data")
-                self.current_ref_data["n_bases"] += len(line)
-                self.refs_len += len(line)
-                processed_reference.write(line)
+                    self.checkpoint_refs_len = self.refs_len
+                    print(line)
+                    self.GenerateCaracterization()
+                    start_checking = True
+                else:
+                    print("Es data")
+                    self.current_ref_data["n_bases"] += len(line)
+                    self.refs_len += len(line)
+                    processed_reference.write(line)
+                line = raw_reference.readline().rstrip()
             
 
         self.meta_file.close()
