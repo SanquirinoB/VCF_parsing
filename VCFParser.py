@@ -299,7 +299,7 @@ class VCFParser():
 
 
     def ProcessVariants(self):
-
+        self.curr_AltIndex = 0
         for alt in self.curr_AltList:
             self.curr_Alt = alt
             
@@ -326,6 +326,7 @@ class VCFParser():
                     print("(!) Edit no canonico descartado.")
                 self.n_droppedRecords += 1
                 self.is_valid_record = False
+            self.curr_AltIndex += 1
 
         if self.isDebugMode:
             print("Edits obtained: ", len(self.phrase_Cache),
