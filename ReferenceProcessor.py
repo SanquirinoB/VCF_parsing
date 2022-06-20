@@ -66,6 +66,8 @@ class ReferenceProcessor():
             dict_aux["relPosRef"] = self.refs_len
             processed_reference.write(edit)
 
+            self.reference_data[edit] = dict_aux.copy()
+
             self.n_refs += 1
             self.refs_len += len(edit)
 
