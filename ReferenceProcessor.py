@@ -16,10 +16,6 @@ class ReferenceProcessor():
         self.parsing_folder = os.path.join(tmp_folder, "Parsing")
         self.metadata_folder = os.path.join(tmp_folder, "Meta_data")
 
-        assert os.path.isdir(tmp_folder)
-        assert os.path.isdir(self.parsing_folder)
-        assert os.path.isdir(self.metadata_folder)
-
         # Helper variables
         self.meta_structure = MetaRef()
         self.current_ref_data = {}
@@ -58,6 +54,9 @@ class ReferenceProcessor():
 
 
     def StartReferenceProcessing(self):
+        assert os.path.isdir(self.parsing_folder)
+        assert os.path.isdir(self.metadata_folder)
+
         # Get propper paths
         processed_ref_file_path = os.path.join(self.parsing_folder, "Reference.tmprlz")
         metadata_file_path = os.path.join(self.metadata_folder, "Reference.metarlz")
