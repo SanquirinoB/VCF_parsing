@@ -236,7 +236,7 @@ class VCFParser():
         # If it doesnt work, the exception will be thrown in this function
         edit_length = self.FindValidVariantLength()
         self.phrase_Len = edit_length
-        self.phrase_Edit = curr_Ref_data.get("internalID")
+        self.phrase_Edit = curr_Ref_data.get("internal_ID")
         # TODO no deberiamos trabajar con pos relativa, se arregla dsps
         self.phrase_PosEdit = self.ReferenceIndexTransform(
             curr_Ref_data.get("relPosRef") + self.curr_Pos + edit_length)
@@ -251,7 +251,7 @@ class VCFParser():
 
         self.phrase_Len = 0
         self.phrase_Edit = self.meta_ReferenceValues.get(
-            self.curr_Chrom).get("internalID")
+            self.curr_Chrom).get("internal_ID")
         self.phrase_PosEdit = self.curr_Pos
         self.phrase_LenEdit = edit_length
 
@@ -359,6 +359,7 @@ class VCFParser():
             self.ProcessVariants()
 
             if self.is_valid_record:
+                print(record)
                 if self.n_print > 0: print("Variante:\n", self.phrase_Cache)
                 # Over each sample
                 for i in range(self.n_samples):
@@ -406,7 +407,7 @@ class VCFParser():
         for key in self.meta_ReferenceValues.keys():
             key_values = self.meta_ReferenceValues[key]
             aux_line = "{}\t{}\t{}\r\n".format(key_values.get(
-                "internalID"), key_values.get("ID"), key_values.get("relPosRef"))
+                "internal_ID"), key_values.get("ID"), key_values.get("relPosRef"))
             self.TMPRLZ.write(aux_line.encode("ascii"))
 
         # Samples names and theirs IDs (IID, ID)
