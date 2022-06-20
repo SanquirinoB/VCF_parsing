@@ -188,8 +188,6 @@ class VCFParser():
     def WritePhrase(self, list_values_phrase):
         #if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
         for values_phrase in list_values_phrase:
-            #if self.n_print > 0: 
-            print(values_phrase)
             self.phrase_struct.m_indv = values_phrase[0]
             self.phrase_struct.m_chrom = values_phrase[1]
             self.phrase_struct.m_alele = values_phrase[2]
@@ -205,7 +203,7 @@ class VCFParser():
             self.VCFParsed.write(bytearray(self.phrase_struct))
             self.n_phrases += 1
 
-            self.n_print -= 1
+            #self.n_print -= 1
             
 
     def FindValidVariantLength(self):
@@ -364,8 +362,7 @@ class VCFParser():
 
             # Filter check
             if (self.DiscardNotPASSRecords and record[6] != "PASS"):
-                print(
-                    "(!) WARNING|FILTER: Se ha descartado un registro por no cumplir con FILTER=PASS. Edit nro {}".format(-1))
+                print("(!) WARNING|FILTER: Se ha descartado un registro por no cumplir con FILTER=PASS. Edit nro {}".format(-1))
                 raw_record = self.VCF.readline()
                 continue
 
@@ -378,13 +375,9 @@ class VCFParser():
             self.ProcessVariants()
 
             if self.is_valid_record:
-                print(record)
                 if self.n_print > 0: print("Variante:\n", self.phrase_Cache)
                 # Over each sample
                 for i in range(self.n_samples):
-                    # if self.isDebugMode:
-                    #     print("For sample ", self.ID_samples.get(i))
-                    # Set internal id
                     self.phrase_INDV = i
 
                     self.UpdateAlelesList(raw_AleleFullList[i])
