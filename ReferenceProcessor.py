@@ -11,9 +11,6 @@ class ReferenceProcessor():
         self.bases_to_include = "ACTGN"
         self.raw_reference_path = _raw_reference_path
 
-        # DEBUG
-        self.largos = []
-
         # We asume that VCFParser is excecuted first
         tmp_folder = os.path.join(_destination_folder, "Tmp")
         self.parsing_folder = os.path.join(tmp_folder, "Parsing")
