@@ -238,7 +238,7 @@ class VCFParser():
 
         if (len(complete_edit) > 0):
             tmp_phrases_list.append(self.CreateExplicitPhrase(complete_edit))
-            
+
         self.CustomAddToPhraseCache(tmp_phrases_list)
 
     def GenerateDeletionPhraseCache(self):
@@ -325,7 +325,7 @@ class VCFParser():
             self.curr_Alt = alt
             
             if re.fullmatch(self.p_nucleotid_only, alt):  # If its an explicit edit
-                self.GenerateExplicitEditPhraseCache(alt)
+                self.GenerateExplicitEditPhraseCacheFull(alt)
 
             elif self.HasValidSTYPE():  # If its an external reference edit, we should check the SVTYPE
 
