@@ -220,15 +220,26 @@ class VCFParser():
                 "[FindValidVariantLength] ERROR: Valid end value (END/SVLEN) not found. Variant can't be processed.")
             exit(1)
 
-    def GenerateExplicitEditPhraseCache(self, edit):
+    def CreateExplicitPhrase(self, edit):
         curr_ref_data = self.meta_ReferenceValues.get(edit)
-
         self.phrase_Len = len(self.curr_Alt)
         self.phrase_Edit = curr_ref_data.get("internal_ID")
         self.phrase_PosEdit = curr_ref_data.get("relPosRef")
         self.phrase_LenEdit = len(edit)
         
-        self.AddToPhraseCache()  # Done
+        return self.CreateCustomPhrase() # Done
+
+    def GenerateExplicitEditPhraseCacheFull(self, complete_edit):
+        tmp_phrases_list = []
+
+        while(len(complete_edit) > 4):
+            tmp_phrases_list.append(self.CreateExplicitPhrase(complete_edit[:4]))
+            complete_edit = complete_edit[4:]
+
+        if (len(complete_edit) > 0):
+            tmp_phrases_list.append(self.CreateExplicitPhrase(complete_edit))
+            
+        self.CustomAddToPhraseCache(tmp_phrases_list)
 
     def GenerateDeletionPhraseCache(self):
         # If it doesnt work, the exception will be thrown in this function
