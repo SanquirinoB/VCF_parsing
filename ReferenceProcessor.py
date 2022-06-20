@@ -1,4 +1,4 @@
-from itertools import permutations
+from itertools import product
 from Structures import MetaRef
 import os
 import shutil
@@ -8,7 +8,6 @@ class ReferenceProcessor():
         # First parameters
         self.n_refs = 0
         self.refs_len = 0
-        self.bases_to_include = "ACTGN"
         self.raw_reference_path = _raw_reference_path
 
         # We asume that VCFParser is excecuted first
@@ -52,6 +51,23 @@ class ReferenceProcessor():
 
         self.reference_data[self.current_ref_data["ID"]] = dict_aux.copy()       
 
+    def AppendBasePermutations(self, processed_reference):
+        bases = ["A", "C", "T", "G", "N"]
+        edits = []
+        for i in range(1,5):
+            for p in product(bases, repeat=i):
+                edits.append("".join(p))
+
+        for edit in edits:
+            dict_aux = {}
+            dict_aux["ID"] = edit
+            dict_aux["internal_ID"] = self.n_refs
+            dict_aux["length"] = len(edit)
+            dict_aux["relPosRef"] = self.refs_len
+            processed_reference.write(edit)
+
+            self.n_refs += 1
+            self.refs_len += len(edit)
 
     def StartReferenceProcessing(self):
         assert os.path.isdir(self.parsing_folder)
@@ -80,7 +96,6 @@ class ReferenceProcessor():
                         self.SaveRefData()
 
                     self.checkpoint_refs_len = self.refs_len
-                    print(line)
                     self.GenerateCharacterization(line)
                     start_checking = True
                 else:
@@ -88,6 +103,8 @@ class ReferenceProcessor():
                     self.refs_len += len(line)
                     processed_reference.write(line)
                 line = raw_reference.readline().rstrip()
+
+            self.AppendBasePermutations(processed_reference)
             
 
         self.meta_file.close()

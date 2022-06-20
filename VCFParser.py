@@ -220,6 +220,16 @@ class VCFParser():
                 "[FindValidVariantLength] ERROR: Valid end value (END/SVLEN) not found. Variant can't be processed.")
             exit(1)
 
+    def GenerateExplicitEditPhraseCache(self, edit):
+        curr_ref_data = self.meta_ReferenceValues.get(edit)
+
+        self.phrase_Len = len(self.curr_Alt)
+        self.phrase_Edit = curr_ref_data.get("internal_ID")
+        self.phrase_PosEdit = curr_ref_data.get("relPosRef")
+        self.phrase_LenEdit = len(edit)
+        
+        self.AddToPhraseCache()  # Done
+
     def GenerateDeletionPhraseCache(self):
         # If it doesnt work, the exception will be thrown in this function
         edit_length = self.FindValidVariantLength()
@@ -304,11 +314,8 @@ class VCFParser():
             self.curr_Alt = alt
             
             if re.fullmatch(self.p_nucleotid_only, alt):  # If its an explicit edit
-                self.phrase_PosEdit = 0
-                self.phrase_LenEdit = 0
-                self.phrase_Edit = self.ACTGNtoInt(alt)
+                self.GenerateExplicitEditPhraseCache(alt)
 
-                self.AddToPhraseCache()  # Done
             elif self.HasValidSTYPE():  # If its an external reference edit, we should check the SVTYPE
 
                 if self.curr_SVTYPE == "DEL" or alt == "<CN0>":
