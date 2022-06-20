@@ -93,7 +93,7 @@ class ReferenceProcessor():
         self.meta_file.close()
 
     def GetReferenceData(self):
-        return self.reference_data
+        return self.refs_len, self.reference_data
 
 
             

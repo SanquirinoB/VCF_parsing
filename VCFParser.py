@@ -92,7 +92,7 @@ class VCFParser():
                 pass
             line = self.VCF.readline()
 
-        self.meta_ReferenceValues = self.reference_processor.GetReferenceData()
+        self.Length_Reference, self.meta_ReferenceValues = self.reference_processor.GetReferenceData()
 
         # This last line its supposed to be the header line
         tmp_ID_samples = line.split("\t")[9:]
