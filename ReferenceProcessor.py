@@ -108,8 +108,15 @@ class ReferenceProcessor():
 
             self.AppendBasePermutations(processed_reference)
             
-
+        # Return to the beginning
+        self.meta_file.seek(0)
+        # Create general report
+        self.meta_structure.m_ID = 0 # Dummy name, just for check
+        self.meta_structure.m_nBases = self.refs_len # Full size
+        self.meta_structure.m_relPos = self.n_refs # References expected
+        self.meta_file.write(bytearray(self.meta_structure))
         self.meta_file.close()
+
 
     def GetReferenceData(self):
         return self.refs_len, self.reference_data
