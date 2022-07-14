@@ -409,24 +409,17 @@ class VCFParser():
         # Number of phrases (int)
         self.meta_struct.m_nPhrases = self.n_phrases
         self.TMPRLZ.write(bytearray(self.meta_struct))
+        # Number of samples (int)
+        self.meta_struct.m_nPhrases = self.n_samples
+        self.TMPRLZ.write(bytearray(self.meta_struct))
 
     def GenerateRLZResume(self):
-        # Number of contigs (int)
-        aux_line = "{}\r\n".format(self.counter_contig)
-        self.TMPRLZ.write(aux_line.encode("ascii"))
-
-        # Contigs and theirs IDs (IID, ID, int)
-        for key in self.meta_ReferenceValues.keys():
-            key_values = self.meta_ReferenceValues[key]
-            aux_line = "{}\t{}\t{}\r\n".format(key_values.get(
-                "internal_ID"), key_values.get("ID"), key_values.get("relPosRef"))
-            self.TMPRLZ.write(aux_line.encode("ascii"))
-
         # Samples names and theirs IDs (IID, ID)
+        # ID is related to the number line 1-indexed
         for key in self.ID_samples.keys():
             values = self.ID_samples[key]
-            aux_line = "{}\t{}\r\n".format(key, values)
-            self.TMPRLZ.write(aux_line.encode("ascii"))
+            aux_line = "{}\r\n".format(values)
+            self.TMPRLZ.write(aux_line.encode("utf8"))
 
     def ReportEndProcess(self):
         print("[RLZ] Resume parsing process:")
@@ -493,10 +486,12 @@ class VCFParser():
 
         path_ID_info = os.path.join(metadata_folder, "ID_info.metarlz")
         path_meta_info = os.path.join(metadata_folder, "Meta_info.metarlz")
+
+        with open(path_meta_info, mode="wb") as aux_TMPRLZ:
+            self.TMPRLZ = aux_TMPRLZ
+            self.GenerateMetaInfoResume()
+
         with open(path_ID_info, mode="wb") as aux_TMPRLZ:
             self.TMPRLZ = aux_TMPRLZ
             self.GenerateRLZResume()
         
-        with open(path_meta_info, mode="wb") as aux_TMPRLZ:
-            self.TMPRLZ = aux_TMPRLZ
-            self.GenerateMetaInfoResume()
