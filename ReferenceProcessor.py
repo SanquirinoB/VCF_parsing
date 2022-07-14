@@ -58,7 +58,14 @@ class ReferenceProcessor():
             for p in product(bases, repeat=i):
                 edits.append("".join(p))
 
+        print(edits)
         for edit in edits:
+
+            self.meta_structure.m_ID = self.n_refs
+            self.meta_structure.m_nBases = len(edit)
+            self.meta_structure.m_relPos = self.refs_len
+            self.meta_file.write(bytearray(self.meta_structure))
+
             dict_aux = {}
             dict_aux["ID"] = edit
             dict_aux["internal_ID"] = self.n_refs
