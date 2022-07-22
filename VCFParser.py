@@ -156,7 +156,7 @@ class VCFParser():
     def UpdateGenericPhraseValues(self):
         curr_Ref_data = self.meta_ReferenceValues.get(self.curr_Chrom)
         self.phrase_Chrom = int(self.curr_Chrom)
-        self.phrase_Pos = curr_Ref_data.get("relPosRef") + self.curr_Pos
+        self.phrase_Pos = self.curr_Pos
         self.phrase_Len = len(self.curr_REF)
 
     def UpdateAlelesList(self, INDVRecord):
@@ -220,7 +220,6 @@ class VCFParser():
 
     def CreateExplicitPhrase(self, edit):
         curr_ref_data = self.meta_ReferenceValues.get(edit)
-        self.phrase_Len = len(self.curr_Alt)
         self.phrase_Edit = curr_ref_data.get("internal_ID")
         self.phrase_PosEdit = curr_ref_data.get("relPosRef")
         self.phrase_LenEdit = len(edit)
@@ -268,7 +267,6 @@ class VCFParser():
         edit_length = self.FindValidVariantLength()
         n_copy = int(self.curr_Alt[3:-1])
 
-        self.phrase_Len = 0
         self.phrase_Edit = self.meta_ReferenceValues.get(
             self.curr_Chrom).get("internal_ID")
         self.phrase_PosEdit = self.curr_Pos
