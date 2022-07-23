@@ -58,7 +58,6 @@ class ReferenceProcessor():
             for p in product(bases, repeat=i):
                 edits.append("".join(p))
 
-        print(edits)
         for edit in edits:
 
             self.meta_structure.m_ID = self.n_refs
@@ -89,6 +88,12 @@ class ReferenceProcessor():
         # Open metadata file for refs info
         self.meta_file = open(metadata_file_path, 'wb')
 
+        # Write an empty structure for leave spase
+        self.meta_structure.m_ID = 0 # Dummy name, just for check
+        self.meta_structure.m_nBases = 0 # Full size
+        self.meta_structure.m_relPos = 0 # References expected
+        self.meta_file.write(bytearray(self.meta_structure))
+
         # Before we process the first ref, we start to check if all the values are correct
         start_checking = False
         self.checkpoint_refs_len = 0
@@ -99,9 +104,11 @@ class ReferenceProcessor():
             line = raw_reference.readline().rstrip()
             while line:
                 if(self.IsDescriptionLine(line)):
+                    print(line)
                     # Before we start to check a new ref, we need to ensure all info read before was correct
                     if(start_checking):
                         assert (self.refs_len - self.checkpoint_refs_len) == self.current_ref_data["n_bases"]
+                        print(self.current_ref_data["internal_ID"])
                         self.SaveRefData()
 
                     self.checkpoint_refs_len = self.refs_len
@@ -113,6 +120,10 @@ class ReferenceProcessor():
                     processed_reference.write(line)
                 line = raw_reference.readline().rstrip()
 
+            assert (self.refs_len - self.checkpoint_refs_len) == self.current_ref_data["n_bases"]
+            print(self.current_ref_data["internal_ID"])
+            
+            self.SaveRefData()
             self.AppendBasePermutations(processed_reference)
             
         # Return to the beginning
