@@ -155,7 +155,7 @@ class VCFParser():
 
     def UpdateGenericPhraseValues(self):
         curr_Ref_data = self.meta_ReferenceValues.get(self.curr_Chrom)
-        self.phrase_Chrom = int(self.curr_Chrom)
+        self.phrase_Chrom = int(self.curr_Chrom) - 1 #0-index
         self.phrase_Pos = self.curr_Pos
         self.phrase_Len = len(self.curr_REF)
 
