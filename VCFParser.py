@@ -328,8 +328,11 @@ class VCFParser():
                 if self.curr_SVTYPE == "DEL" or alt == "<CN0>":
                     self.GenerateDeletionPhraseCache()
 
+                # TODO: Not supported for now
                 elif self.curr_SVTYPE == "INV" and alt == "<INV>":
-                    self.GenerateInversionPhraseCache()
+                    # self.GenerateInversionPhraseCache()
+                    self.n_droppedRecords += 1
+                    self.is_valid_record = False
 
                 # SVTYPE tipically is CNV or DUP
                 elif re.fullmatch(self.p_cnv_record, alt):
