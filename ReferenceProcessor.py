@@ -52,7 +52,9 @@ class ReferenceProcessor():
         self.reference_data[self.current_ref_data["ID"]] = dict_aux.copy()       
 
     def AppendBasePermutations(self, processed_reference):
-        bases = ["A", "C", "T", "G", "N"]
+        # TODO: Enable N in RLZ later
+        # bases = ["A", "C", "T", "G", "N"]
+        bases = ["A", "C", "T", "G"]
         edits = []
         for i in range(1,5):
             for p in product(bases, repeat=i):
