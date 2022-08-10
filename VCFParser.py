@@ -469,10 +469,6 @@ class VCFParser():
         is_first_meta = True
         self.VCFParsed = open(path_fileParsed, mode="wb")
 
-        # First create a dummy start
-        self.WritePhrase([[0, 1, 0, 0, 0, 0, 0, 0]])
-        self.n_phrases += 1
-
         self.reference_processor.StartReferenceProcessing()
 
         for path_file in self.path_file_list:
@@ -488,12 +484,15 @@ class VCFParser():
                 self.ProcessMETA(keep_meta=is_first_meta)
                 is_first_meta = False
 
+                # First create a dummy start
+                self.WritePhrase([[0, 0, 0, 0, 0, 0, 0, 0]])
+
                 # Interpretate edits
                 self.ProcessRECORDS()
 
         # First create a dummy end
         self.WritePhrase([[self.n_samples - 1,
-                           int(self.n_chromosomes),
+                           int(self.n_chromosomes) - 1,
                            1,
                            self.meta_ReferenceValues.get(
                                self.n_chromosomes).get("length") - 1,
@@ -501,8 +500,6 @@ class VCFParser():
                            0,
                            0,
                            0]])
-
-        self.n_phrases += 1
 
         self.VCFParsed.close()
         file_stats = os.stat(path_fileParsed)
