@@ -10,7 +10,7 @@ from ReferenceProcessor import ReferenceProcessor
 
 
 class VCFParser():
-    def __init__(self, Destination_folder, Reference_path, VCF_path_list, N_chromosomes = 24,MISS_AleleAlt_Value=0, LeaveUnphasedAsPhased=True,
+    def __init__(self, Destination_folder, Reference_path, VCF_path_list, N_chromosomes=24, MISS_AleleAlt_Value=0, LeaveUnphasedAsPhased=True,
                  DiscardNotPASSRecords=True, debug=False):
         # Debug
         self.isDebugMode = debug
@@ -62,7 +62,8 @@ class VCFParser():
         self.n_samples = 0
         self.Length_Reference = 0
         self.n_phrases = 0
-        self.reference_processor = ReferenceProcessor(Reference_path, Destination_folder)
+        self.reference_processor = ReferenceProcessor(
+            Reference_path, Destination_folder)
 
         # Variables for VCF record processing
         self.curr_Chrom = ""
@@ -155,7 +156,7 @@ class VCFParser():
 
     def UpdateGenericPhraseValues(self):
         curr_Ref_data = self.meta_ReferenceValues.get(self.curr_Chrom)
-        self.phrase_Chrom = int(self.curr_Chrom) - 1 #0-index
+        self.phrase_Chrom = int(self.curr_Chrom) - 1  # 0-index
         self.phrase_Pos = self.curr_Pos
         self.phrase_Len = len(self.curr_REF)
 
@@ -204,7 +205,6 @@ class VCFParser():
             self.n_phrases += 1
 
             #self.n_print -= 1
-            
 
     def FindValidVariantLength(self):
 
@@ -223,14 +223,15 @@ class VCFParser():
         self.phrase_Edit = curr_ref_data.get("internal_ID")
         self.phrase_PosEdit = curr_ref_data.get("relPosRef")
         self.phrase_LenEdit = len(edit)
-        
-        return self.CreateCustomPhrase() # Done
+
+        return self.CreateCustomPhrase()  # Done
 
     def GenerateExplicitEditPhraseCacheFull(self, complete_edit):
         tmp_phrases_list = []
 
-        while(len(complete_edit) > 4):
-            tmp_phrases_list.append(self.CreateExplicitPhrase(complete_edit[:4]))
+        while (len(complete_edit) > 4):
+            tmp_phrases_list.append(
+                self.CreateExplicitPhrase(complete_edit[:4]))
             complete_edit = complete_edit[4:]
 
         if (len(complete_edit) > 0):
@@ -304,9 +305,9 @@ class VCFParser():
         return tmp_phrase
 
     def HasValidSTYPE(self):
-        if("SVTYPE" in self.curr_Info.keys()):
+        if ("SVTYPE" in self.curr_Info.keys()):
             self.curr_SVTYPE = self.curr_Info.get("SVTYPE")
-            
+
             return (self.curr_SVTYPE == "DEL" or
                     self.curr_SVTYPE == "INV" or
                     self.curr_SVTYPE == "CNV" or
@@ -314,12 +315,11 @@ class VCFParser():
         else:
             return False
 
-
     def ProcessVariants(self):
         self.curr_AltIndex = 0
         for alt in self.curr_AltList:
             self.curr_Alt = alt
-            
+
             if re.fullmatch(self.p_nucleotid_only, alt):  # If its an explicit edit
                 self.GenerateExplicitEditPhraseCacheFull(alt)
 
@@ -363,7 +363,8 @@ class VCFParser():
 
             # Filter check
             if (self.DiscardNotPASSRecords and record[6] != "PASS"):
-                print("(!) WARNING|FILTER: Se ha descartado un registro por no cumplir con FILTER=PASS. Edit nro {}".format(-1))
+                print(
+                    "(!) WARNING|FILTER: Se ha descartado un registro por no cumplir con FILTER=PASS. Edit nro {}".format(-1))
                 raw_record = self.VCF.readline()
                 continue
 
@@ -376,7 +377,8 @@ class VCFParser():
             self.ProcessVariants()
 
             if self.is_valid_record:
-                if self.n_print > 0: print("Variante:\n", self.phrase_Cache)
+                if self.n_print > 0:
+                    print("Variante:\n", self.phrase_Cache)
                 # Over each sample
                 for i in range(self.n_samples):
                     self.phrase_INDV = i
@@ -430,8 +432,10 @@ class VCFParser():
         print("[RLZ]\tNumber of samples identified:", self.n_samples)
         print("[RLZ]\tNumber of dropped records:", self.n_droppedRecords)
         print("[RLZ]\tNumber of valid edits captured:", self.n_phrases)
-        print("[RLZ]\tFile size processed:", self.size_VCFFiles_processed / (1024 * 1024), "MB")
-        print("[RLZ]\tSize of parsed file generated:", self.size_ParsingFile_generated / (1024 * 1024), "MB")
+        print("[RLZ]\tFile size processed:",
+              self.size_VCFFiles_processed / (1024 * 1024), "MB")
+        print("[RLZ]\tSize of parsed file generated:",
+              self.size_ParsingFile_generated / (1024 * 1024), "MB")
 
         if self.isDebugMode:
             print("\tCurr IDs:", self.ID_samples)
@@ -461,12 +465,13 @@ class VCFParser():
         file_name = "phrases"
         path_fileParsed = os.path.join(
             parsing_folder, file_name + ".tmprlz")
-            
+
         is_first_meta = True
         self.VCFParsed = open(path_fileParsed, mode="wb")
 
-        #First create a dummy start
-        # self.WritePhrase([[-1, -1, -1, -1, -1, -1, -1, -1]])
+        # First create a dummy start
+        self.WritePhrase([[0, 1, 0, 0, 0, 0, 0, 0]])
+        self.n_phrases += 1
 
         self.reference_processor.StartReferenceProcessing()
 
@@ -486,8 +491,18 @@ class VCFParser():
                 # Interpretate edits
                 self.ProcessRECORDS()
 
-        #First create a dummy end
-        # self.WritePhrase([[-1, -1, -1, -1, -1, -1, -1, -1]])
+        # First create a dummy end
+        self.WritePhrase([[self.n_samples - 1,
+                           self.n_chromosomes,
+                           1,
+                           self.meta_ReferenceValues.get(
+                               self.n_chromosomes).get("n_bases") - 1,
+                           0,
+                           0,
+                           0,
+                           0]])
+
+        self.n_phrases += 1
 
         self.VCFParsed.close()
         file_stats = os.stat(path_fileParsed)
@@ -504,4 +519,3 @@ class VCFParser():
         with open(path_ID_info, mode="wb") as aux_TMPRLZ:
             self.TMPRLZ = aux_TMPRLZ
             self.GenerateRLZResume()
-        
