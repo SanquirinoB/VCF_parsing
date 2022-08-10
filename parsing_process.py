@@ -4,12 +4,14 @@
 from VCFParser import VCFParser
 import sys
 
+
 def main():
     if sys.argv[3] == "-n":
         # TODO: Ahora asumimos que todo correcto no mas
-        # (self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value = 0, LeaveUnphasedAsPhased = True, 
+        # (self, Destination_folder, VCF_path_list, MISS_AleleAlt_Value = 0, LeaveUnphasedAsPhased = True,
         # DiscardNotPASSRecords = True, debug = False):
-        parser = VCFParser(sys.argv[1], sys.argv[2], sys.argv[- int(sys.argv[4]):],sys.argv[3], 0, True, True, False)
+        parser = VCFParser(
+            sys.argv[1], sys.argv[2], sys.argv[- int(sys.argv[4]):], sys.argv[4], 0, True, True, False)
         parser.StartParsing()
         return 0
     else:
@@ -25,9 +27,6 @@ def main():
         print(exp)
         return 1
 
-    
 
 if __name__ == "__main__":
     sys.exit(main())
-
-    

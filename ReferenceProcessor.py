@@ -3,6 +3,7 @@ from Structures import MetaRef
 import os
 import shutil
 
+
 class ReferenceProcessor():
     def __init__(self, _raw_reference_path, _destination_folder):
         # First parameters
@@ -49,14 +50,14 @@ class ReferenceProcessor():
         dict_aux["length"] = self.current_ref_data["n_bases"]
         dict_aux["relPosRef"] = self.checkpoint_refs_len
 
-        self.reference_data[self.current_ref_data["ID"]] = dict_aux.copy()       
+        self.reference_data[self.current_ref_data["ID"]] = dict_aux.copy()
 
     def AppendBasePermutations(self, processed_reference):
         # TODO: Enable N in RLZ later
         # bases = ["A", "C", "T", "G", "N"]
         bases = ["A", "C", "T", "G"]
         edits = []
-        for i in range(1,5):
+        for i in range(1, 5):
             for p in product(bases, repeat=i):
                 edits.append("".join(p))
 
@@ -84,16 +85,18 @@ class ReferenceProcessor():
         assert os.path.isdir(self.metadata_folder)
 
         # Get propper paths
-        processed_ref_file_path = os.path.join(self.parsing_folder, "Reference.tmprlz")
-        metadata_file_path = os.path.join(self.metadata_folder, "Reference.metarlz")
+        processed_ref_file_path = os.path.join(
+            self.parsing_folder, "Reference.tmprlz")
+        metadata_file_path = os.path.join(
+            self.metadata_folder, "Reference.metarlz")
 
         # Open metadata file for refs info
         self.meta_file = open(metadata_file_path, 'wb')
 
         # Write an empty structure for leave spase
-        self.meta_structure.m_ID = 0 # Dummy name, just for check
-        self.meta_structure.m_nBases = 0 # Full size
-        self.meta_structure.m_relPos = 0 # References expected
+        self.meta_structure.m_ID = 0  # Dummy name, just for check
+        self.meta_structure.m_nBases = 0  # Full size
+        self.meta_structure.m_relPos = 0  # References expected
         self.meta_file.write(bytearray(self.meta_structure))
 
         # Before we process the first ref, we start to check if all the values are correct
@@ -105,12 +108,11 @@ class ReferenceProcessor():
             # First we read the first line of the ref, which should be like >1 dna:chromosome chromosome:GRCh37:1:1:249250621:1\n
             line = raw_reference.readline().rstrip()
             while line:
-                if(self.IsDescriptionLine(line)):
-                    print(line)
+                if (self.IsDescriptionLine(line)):
                     # Before we start to check a new ref, we need to ensure all info read before was correct
-                    if(start_checking):
-                        assert (self.refs_len - self.checkpoint_refs_len) == self.current_ref_data["n_bases"]
-                        print(self.current_ref_data["internal_ID"])
+                    if (start_checking):
+                        assert (
+                            self.refs_len - self.checkpoint_refs_len) == self.current_ref_data["n_bases"]
                         self.SaveRefData()
 
                     self.checkpoint_refs_len = self.refs_len
@@ -122,26 +124,20 @@ class ReferenceProcessor():
                     processed_reference.write(line)
                 line = raw_reference.readline().rstrip()
 
-            assert (self.refs_len - self.checkpoint_refs_len) == self.current_ref_data["n_bases"]
-            print(self.current_ref_data["internal_ID"])
-            
+            assert (
+                self.refs_len - self.checkpoint_refs_len) == self.current_ref_data["n_bases"]
+
             self.SaveRefData()
             self.AppendBasePermutations(processed_reference)
-            
+
         # Return to the beginning
         self.meta_file.seek(0)
         # Create general report
-        self.meta_structure.m_ID = 0 # Dummy name, just for check
-        self.meta_structure.m_nBases = self.refs_len # Full size
-        self.meta_structure.m_relPos = self.n_refs # References expected
+        self.meta_structure.m_ID = 0  # Dummy name, just for check
+        self.meta_structure.m_nBases = self.refs_len  # Full size
+        self.meta_structure.m_relPos = self.n_refs  # References expected
         self.meta_file.write(bytearray(self.meta_structure))
         self.meta_file.close()
 
-
     def GetReferenceData(self):
         return self.refs_len, self.reference_data
-
-
-            
-        
-

@@ -10,7 +10,7 @@ from ReferenceProcessor import ReferenceProcessor
 
 
 class VCFParser():
-    def __init__(self, Destination_folder, Reference_path, VCF_path_list, N_chromosomes=24, MISS_AleleAlt_Value=0, LeaveUnphasedAsPhased=True,
+    def __init__(self, Destination_folder, Reference_path, VCF_path_list, N_chromosomes="24", MISS_AleleAlt_Value=0, LeaveUnphasedAsPhased=True,
                  DiscardNotPASSRecords=True, debug=False):
         # Debug
         self.isDebugMode = debug
@@ -416,7 +416,7 @@ class VCFParser():
         self.meta_struct.m_nPhrases = self.n_samples
         self.TMPRLZ.write(bytearray(self.meta_struct))
         # Number of chromosomes (int)
-        self.meta_struct.m_nPhrases = self.n_chromosomes
+        self.meta_struct.m_nPhrases = int(self.n_chromosomes)
         self.TMPRLZ.write(bytearray(self.meta_struct))
 
     def GenerateRLZResume(self):
@@ -493,10 +493,10 @@ class VCFParser():
 
         # First create a dummy end
         self.WritePhrase([[self.n_samples - 1,
-                           self.n_chromosomes,
+                           int(self.n_chromosomes),
                            1,
                            self.meta_ReferenceValues.get(
-                               self.n_chromosomes).get("n_bases") - 1,
+                               self.n_chromosomes).get("length") - 1,
                            0,
                            0,
                            0,
