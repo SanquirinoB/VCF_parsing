@@ -10,7 +10,7 @@ from ReferenceProcessor import ReferenceProcessor
 
 
 class VCFParser():
-    def __init__(self, Destination_folder, Reference_path, VCF_path_list, MISS_AleleAlt_Value=0, LeaveUnphasedAsPhased=True,
+    def __init__(self, Destination_folder, Reference_path, VCF_path_list, N_chromosomes = 24,MISS_AleleAlt_Value=0, LeaveUnphasedAsPhased=True,
                  DiscardNotPASSRecords=True, debug=False):
         # Debug
         self.isDebugMode = debug
@@ -57,7 +57,7 @@ class VCFParser():
 
         # Variables for VCF metadata processing
         self.meta_ReferenceValues = OrderedDict()
-        self.counter_contig = 0
+        self.n_chromosomes = N_chromosomes
         self.ID_samples = {}
         self.n_samples = 0
         self.Length_Reference = 0
@@ -413,6 +413,9 @@ class VCFParser():
         # Number of samples (int)
         self.meta_struct.m_nPhrases = self.n_samples
         self.TMPRLZ.write(bytearray(self.meta_struct))
+        # Number of chromosomes (int)
+        self.meta_struct.m_nPhrases = self.n_chromosomes
+        self.TMPRLZ.write(bytearray(self.meta_struct))
 
     def GenerateRLZResume(self):
         # Samples names and theirs IDs (IID, ID)
@@ -462,6 +465,9 @@ class VCFParser():
         is_first_meta = True
         self.VCFParsed = open(path_fileParsed, mode="wb")
 
+        #First create a dummy start
+        # self.WritePhrase([[-1, -1, -1, -1, -1, -1, -1, -1]])
+
         self.reference_processor.StartReferenceProcessing()
 
         for path_file in self.path_file_list:
@@ -479,6 +485,9 @@ class VCFParser():
 
                 # Interpretate edits
                 self.ProcessRECORDS()
+
+        #First create a dummy end
+        # self.WritePhrase([[-1, -1, -1, -1, -1, -1, -1, -1]])
 
         self.VCFParsed.close()
         file_stats = os.stat(path_fileParsed)
