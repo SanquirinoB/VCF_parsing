@@ -187,7 +187,7 @@ class VCFParser():
             return int(value)
 
     def WritePhrase(self, list_values_phrase):
-        #if self.isDebugMode: print("Phrases to be writed: ", len(list_values_phrase))
+        # if True: print("Phrases to be writed: ", len(list_values_phrase))
         for values_phrase in list_values_phrase:
             self.phrase_struct.m_indv = values_phrase[0]
             self.phrase_struct.m_chrom = values_phrase[1]
@@ -198,7 +198,7 @@ class VCFParser():
             self.phrase_struct.m_pos_e = values_phrase[6]
             self.phrase_struct.m_len_e = values_phrase[7]
 
-            #if self.isDebugMode: print("Phrase to be writed: ", phrase)
+            # if True: print("Phrase to be writed: ", values_phrase)
 
             #phrase = phrase.encode("ascii")
             self.VCFParsed.write(bytearray(self.phrase_struct))
@@ -482,10 +482,10 @@ class VCFParser():
 
                 # Collect VCF metainformation
                 self.ProcessMETA(keep_meta=is_first_meta)
-                is_first_meta = False
 
                 # First create a dummy start
-                self.WritePhrase([[0, 0, 0, 0, 0, 0, 0, 0]])
+                if (is_first_meta) : self.WritePhrase([[0, 0, 0, 0, 0, 0, 0, 0]])
+                is_first_meta = False
 
                 # Interpretate edits
                 self.ProcessRECORDS()
