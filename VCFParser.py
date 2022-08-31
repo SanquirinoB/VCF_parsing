@@ -177,15 +177,6 @@ class VCFParser():
         # if self.isDebugMode:
         #     print("CurrAleleList is:", self.curr_AleleList)
 
-    def ACTGNtoInt(self, value):
-        if type(value) == int:
-            return value
-        else:
-            for base, code in self.alphabet_replace:
-                value = value.replace(base, code)
-
-            return int(value)
-
     def WritePhrase(self, list_values_phrase):
         # if True: print("Phrases to be writed: ", len(list_values_phrase))
         for values_phrase in list_values_phrase:
@@ -194,7 +185,6 @@ class VCFParser():
             self.phrase_struct.m_alele = values_phrase[2]
             self.phrase_struct.m_pos = values_phrase[3]
             self.phrase_struct.m_len = values_phrase[4]
-            self.phrase_struct.m_edit = values_phrase[5]
             self.phrase_struct.m_pos_e = values_phrase[6]
             self.phrase_struct.m_len_e = values_phrase[7]
 
@@ -301,7 +291,6 @@ class VCFParser():
                       PosEdit if PosEdit else self.phrase_PosEdit,
                       LenEdit if LenEdit else self.phrase_LenEdit]
 
-        tmp_phrase[5] = self.ACTGNtoInt(tmp_phrase[5])
         return tmp_phrase
 
     def HasValidSTYPE(self):

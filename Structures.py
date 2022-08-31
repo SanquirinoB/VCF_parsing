@@ -7,7 +7,6 @@ class Phrase(ctypes.Structure):
                 ("m_alele", ctypes.c_longlong),
                 ("m_pos", ctypes.c_longlong),
                 ("m_pos_e", ctypes.c_longlong),
-                ("m_edit", ctypes.c_longlong),
                 ("m_len", ctypes.c_longlong),
                 ("m_len_e", ctypes.c_longlong)]
 
