@@ -478,6 +478,7 @@ class VCFParser():
 
                 # Interpretate edits
                 self.ProcessRECORDS()
+            print("[RLZ]    ", path_file, "parsed!")
 
         # First create a dummy end
         self.WritePhrase([[self.n_samples - 1,

@@ -2,6 +2,9 @@ import numpy as np
 
 class VCFUtils():
 
+    def __init__(self) -> None:
+        pass
+
     def GetSizes(self, nameLists):
         n_record = 0
         sizePerFile = []
@@ -17,6 +20,7 @@ class VCFUtils():
                     n_record += 1
                     line = VCF.readline()
 
+                print(name, n_record)
                 sizePerFile.append(n_record)
             n_record = 0
 
@@ -25,8 +29,11 @@ class VCFUtils():
     def GenerateExpectedSizes(self, originalSizes, n = 10):
 
         newSizes = []
-        for i in range(n):
-            newSizes.append([ i + 1, [ int(value * ((i + 1) / 10)) for value in originalSizes]])
+        for _, value in originalSizes:
+            aux = []
+            for i in range(n):
+                aux.append([ i + 1, int(value * ((i + 1) / 10))])
+            newSizes.append(aux)
 
         return newSizes
 
