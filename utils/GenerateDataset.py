@@ -3,22 +3,23 @@ import os
 from VCFUtils import VCFUtils
 
 if __name__ == "__main__":
-    destPath = sys.argv[1]
+    vcfList = sys.argv[1]
+    destPath = sys.argv[2]
     util = VCFUtils()
     originalNames = []
 
-    # with open(vcfList, 'r') as VCFList:
-    #     line = VCFList.readline()
-    #     print(line)
-    #     while line:
-    #         originalNames.append(line[:-1])
-    #         line = VCFList.readline()
+    with open(vcfList, 'r') as VCFList:
+        line = VCFList.readline()
+        print(line)
+        while line:
+            originalNames.append(line[:-1])
+            line = VCFList.readline()
 
-    # print(originalNames)
-    # originalSizes = util.GetSizes(originalNames)
-    originalSizes = [#["/d2/fernanda/vcf_base/c18.vcf", 2267185],
-    #                  ["/d2/fernanda/vcf_base/c21.vcf", 1105538],
-                     ["/d2/fernanda/vcf_base/c3.vcf", 5832277]
+    print(originalNames)
+    originalSizes = util.GetSizes(originalNames)
+    # originalSizes = [["/d2/fernanda/vcf_base/c18.vcf", 2267185],
+                    #["/d2/fernanda/vcf_base/c21.vcf", 1105538],
+                    # ["/d2/fernanda/vcf_base/c3.vcf", 5832277]
                     #  ["/d2/fernanda/vcf_base/c10.vcf", 3992219],
                     #  ["/d2/fernanda/vcf_base/c6.vcf", 5024119],
                     #  ["/d2/fernanda/vcf_base/c9.vcf", 3560687],
@@ -37,25 +38,22 @@ if __name__ == "__main__":
                     #  ["/d2/fernanda/vcf_base/c19.vcf", 1832506],
                     #  ["/d2/fernanda/vcf_base/c14.vcf", 2655067],
                     #  ["/d2/fernanda/vcf_base/c2.vcf", 7081600],
-                    #  ["/d2/fernanda/vcf_base/c13.vcf", 2857916]
-                    ]
+                    #  ["/d2/fernanda/vcf_base/c13.vcf", 2857916]]
     print(originalSizes)
     # [([id, [sizes...]), ([id, [sizes...]), ...]
-    samples = 10
+    samples = 9
     newSizes = util.GenerateExpectedSizes(originalSizes, samples)
     print(newSizes)
 
-    # for i in range(1):
-    #     folder = os.path.join(destPath, str(i+1))
-    #     if not os.path.isdir(folder):
-    #         os.mkdir(folder)
+    for i in range(samples):
+        folder = os.path.join(destPath, "s" + str((i+1) * 10))
+        if not os.path.isdir(folder):
+            os.mkdir(folder)
 
     for i in range(len(originalSizes)):
         sizes = newSizes[i]
         name = originalSizes[i][0].split("/")[-1]
         for id, size in sizes:
-            if id != 1:
-                continue
             # Keep the same name, but saved in a new subfolder
             new_file = os.path.join(destPath, name)
             source = open(originalSizes[i][0], 'r')
