@@ -401,9 +401,6 @@ class VCFParser():
         # Number of phrases (int)
         self.meta_struct.m_nPhrases = self.n_phrases
         self.TMPRLZ.write(bytearray(self.meta_struct))
-        # Number of samples (int)
-        self.meta_struct.m_nPhrases = self.n_samples
-        self.TMPRLZ.write(bytearray(self.meta_struct))
         # Number of chromosomes (int)
         self.meta_struct.m_nPhrases = int(self.n_chromosomes)
         self.TMPRLZ.write(bytearray(self.meta_struct))
