@@ -7,7 +7,7 @@ if __name__ == "__main__":
     destPath = sys.argv[2]
     util = VCFUtils()
     originalNames = []
-
+    # Recuperamos la lista de nombres de los archivos a prcoesar
     with open(vcfList, 'r') as VCFList:
         line = VCFList.readline()
         print(line)
@@ -15,63 +15,61 @@ if __name__ == "__main__":
             originalNames.append(line[:-1])
             line = VCFList.readline()
 
+    # Ver que todo esta en orden
     print(originalNames)
-    originalSizes = util.GetSizes(originalNames)
-    # originalSizes = [["/d2/fernanda/vcf_base/c18.vcf", 2267185],
-                    #["/d2/fernanda/vcf_base/c21.vcf", 1105538],
-                    # ["/d2/fernanda/vcf_base/c3.vcf", 5832277]
-                    #  ["/d2/fernanda/vcf_base/c10.vcf", 3992219],
-                    #  ["/d2/fernanda/vcf_base/c6.vcf", 5024119],
-                    #  ["/d2/fernanda/vcf_base/c9.vcf", 3560687],
-                    #  ["/d2/fernanda/vcf_base/c12.vcf", 3868428],
-                    #  ["/d2/fernanda/vcf_base/c20.vcf", 1812841],
-                    #  ["/d2/fernanda/vcf_base/c7.vcf", 4716715],
-                    #  ["/d2/fernanda/vcf_base/c16.vcf", 2697949],
-                    #  ["/d2/fernanda/vcf_base/c17.vcf", 2329288],
-                    #  ["/d2/fernanda/vcf_base/c15.vcf", 2424689],
-                    #  ["/d2/fernanda/vcf_base/c22.vcf", 1103547],
-                    #  ["/d2/fernanda/vcf_base/c8.vcf", 4597105],
-                    #  ["/d2/fernanda/vcf_base/c4.vcf", 5732585],
-                    #  ["/d2/fernanda/vcf_base/c5.vcf", 5265763],
-                    #  ["/d2/fernanda/vcf_base/c1.vcf", 6468094],
-                    #  ["/d2/fernanda/vcf_base/c11.vcf", 4045628],
-                    #  ["/d2/fernanda/vcf_base/c19.vcf", 1832506],
-                    #  ["/d2/fernanda/vcf_base/c14.vcf", 2655067],
-                    #  ["/d2/fernanda/vcf_base/c2.vcf", 7081600],
-                    #  ["/d2/fernanda/vcf_base/c13.vcf", 2857916]]
-    print(originalSizes)
-    # [([id, [sizes...]), ([id, [sizes...]), ...]
-    samples = 9
-    newSizes = util.GenerateExpectedSizes(originalSizes, samples)
+
+    # Recuperar cantidad de samples en estos VCF a partir solo del primer archivo
+    originalSize = util.CountSamples(originalNames[0])
+    # originalSizes = util.CountSamples(originalNames[0])
+
+    # Ver que todo esta en orden
+    print(originalSize)
+
+        # Esta linea es para generar el primer sampling sobre los VCF original
+    samples = 1
+        # Despues usamos esta para escalar sobre el 10% original
+    # samples = 10
+    newSizes = util.GenerateExpectedSizes(originalSize, samples)
     print(newSizes)
 
+    # Creo la carpeta donde almacenare los archivos generados
     for i in range(samples):
         folder = os.path.join(destPath, "s" + str((i+1) * 10))
         if not os.path.isdir(folder):
             os.mkdir(folder)
 
-    for i in range(len(originalSizes)):
-        sizes = newSizes[i]
-        name = originalSizes[i][0].split("/")[-1]
-        for id, size in sizes:
-            # Keep the same name, but saved in a new subfolder
-            new_file = os.path.join(destPath, name)
-            source = open(originalSizes[i][0], 'r')
+    # Por cada archivo
+    for i in range(len(originalNames)):
+        name = originalNames[i].split("/")[-1]
+        # Por cada tamano a generar
+        for id, size in newSizes:
+            # Creamos el nuevo documento, mismo nombre pero diferente path
+            new_file = os.path.join(destPath, "s" + str((id) * 10), name)
+            # Abrimos el source
+            source = open(originalNames[i], 'r')
+            # Empezamos a escribir el nuevo documento
             with open(new_file, 'w') as result:
-                # # Keep metadata
+                # Mantenemos la meta data
                 line = source.readline()
                 while (line[0:2] == "##"):
                     result.write(line)
                     line = source.readline()
 
-                # hea(der line
-                result.write(line)
+                # Desde la header line, empezaremos a conservar solo los samples esperados
+                aux = line.split("\t")[:9 + size]
+                aux.append("\n")
+                result.write("\t".join(aux))
+                line = source.readline()
 
-                mask = util.GetMask(size)
-                for j in range(size):
-                    if mask[j] == 1:
-                        result.write(source.readline())
-                    else:
-                        source.readline()
+                while(line):
+                    aux = line.split("\t")[:9 + size]
+                    aux.append("\n")
+                    result.write("\t".join(aux))
+                    line = source.readline()
+
+                aux = line.split("\t")[:9 + size]
+                aux.append("\n")
+                result.write("\t".join(aux))
+
             source.close()
             print(id, "finished for", name)
