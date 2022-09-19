@@ -10,9 +10,11 @@ if __name__ == "__main__":
     util = VCFUtils()
     
     # Generamos una referencia nueva en el folder de destino
-    if (processType == "R"):
-        new_reference = os.path.join(destPath, source)
+    if (processType == "REF"):
+        aux = source.split("/")[-1]
+        new_reference = os.path.join(destPath, aux)
         refFile = open(source, 'r')
+        print("Start", source , "->", new_reference)
         with open(new_reference, 'w') as newFile:
             line = refFile.readline()
             while(line):
@@ -34,9 +36,9 @@ if __name__ == "__main__":
                 line = VCFList.readline()
 
         for name in originalNames:
-            aux = name.split(".")
-            newName = "".join(aux[0]) + "_noN.vcf"
-
+            aux = name.split("/")[-1]
+            newName = os.path.join(destPath, "s100", aux)
+            print("Start", name , "->", newName)
             VCF = open(name, 'r')
             with open(newName, 'w') as newVCF:
 
@@ -49,13 +51,19 @@ if __name__ == "__main__":
                 # Mantenemos el header
                 newVCF.write(line)
                 # Por cada registro eliminaremos forzosamente la letra N
-                line = VCF.readline().split("\t")
+                line = VCF.readline()
+
                 while(line):
+                    if (len(line) == 2): break
+                    line = line.split("\t")
                     # REF
                     line[3] = line[3].replace("N", "A")
                     # ALT
                     line[4] = line[4].replace("N", "A")
+
                     newVCF.write("\t".join(line))
-                    line = VCF.readline().split("\t")
+
+                    line = VCF.readline()
+
+            print( newName,"generated")
             VCF.close()
-            os.remove(name)
