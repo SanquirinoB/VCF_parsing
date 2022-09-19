@@ -39,7 +39,7 @@ class ReferenceProcessor():
     def SaveRefData(self):
         self.meta_structure.m_ID = self.current_ref_data["internal_ID"]
         self.meta_structure.m_nBases = self.current_ref_data["n_bases"]
-        self.meta_structure.m_relPos = self.checkpoint_refs_len
+        self.meta_structure.m_relPos = 0 if self.checkpoint_refs_len == 0 else self.checkpoint_refs_len - 1
         self.meta_file.write(bytearray(self.meta_structure))
 
         # For parsing use
@@ -48,7 +48,8 @@ class ReferenceProcessor():
         dict_aux["ID"] = self.current_ref_data["ID"]
         dict_aux["internal_ID"] = self.current_ref_data["internal_ID"]
         dict_aux["length"] = self.current_ref_data["n_bases"]
-        dict_aux["relPosRef"] = self.checkpoint_refs_len
+        dict_aux["relPosRef"] = 0 if self.checkpoint_refs_len == 0 else self.checkpoint_refs_len - 1
+        print(dict_aux["ID"], dict_aux["relPosRef"])
 
         self.reference_data[self.current_ref_data["ID"]] = dict_aux.copy()
 
@@ -65,14 +66,14 @@ class ReferenceProcessor():
 
             self.meta_structure.m_ID = self.n_refs
             self.meta_structure.m_nBases = len(edit)
-            self.meta_structure.m_relPos = self.refs_len
+            self.meta_structure.m_relPos = 0 if self.refs_len == 0 else self.refs_len - 1
             self.meta_file.write(bytearray(self.meta_structure))
 
             dict_aux = {}
             dict_aux["ID"] = edit
             dict_aux["internal_ID"] = self.n_refs
             dict_aux["length"] = len(edit)
-            dict_aux["relPosRef"] = self.refs_len
+            dict_aux["relPosRef"] = 0 if self.refs_len == 0 else self.refs_len - 1
             processed_reference.write(edit)
 
             self.reference_data[edit] = dict_aux.copy()
