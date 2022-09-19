@@ -49,7 +49,7 @@ class ReferenceProcessor():
         dict_aux["internal_ID"] = self.current_ref_data["internal_ID"]
         dict_aux["length"] = self.current_ref_data["n_bases"]
         dict_aux["relPosRef"] = 0 if self.checkpoint_refs_len == 0 else self.checkpoint_refs_len - 1
-        print(dict_aux["ID"], dict_aux["relPosRef"])
+        # print(dict_aux["ID"], dict_aux["relPosRef"])
 
         self.reference_data[self.current_ref_data["ID"]] = dict_aux.copy()
 
