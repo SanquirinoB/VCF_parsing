@@ -26,17 +26,17 @@ if __name__ == "__main__":
     print(originalSize)
 
         # Esta linea es para generar el primer sampling sobre los VCF original
-    samples = 1
+    # samples = 1
         # Despues usamos esta para escalar sobre el 10% original
-    # samples = 10
+    samples = 9
     newSizes = util.GenerateExpectedSizes(originalSize, samples)
     print(newSizes)
 
     # Creo la carpeta donde almacenare los archivos generados
-    for i in range(samples):
-        folder = os.path.join(destPath, "s" + str((i+1) * 10))
-        if not os.path.isdir(folder):
-            os.mkdir(folder)
+    # for i in range(samples):
+    #     folder = os.path.join(destPath, "s" + str((i+1) * 10))
+    #     if not os.path.isdir(folder):
+    #         os.mkdir(folder)
 
     # Por cada archivo
     for i in range(len(originalNames)):
@@ -47,6 +47,7 @@ if __name__ == "__main__":
             new_file = os.path.join(destPath, "s" + str((id) * 10), name)
             # Abrimos el source
             source = open(originalNames[i], 'r')
+            print("Start", originalNames[i] , "->", new_file, " with samples =", size)
             # Empezamos a escribir el nuevo documento
             with open(new_file, 'w') as result:
                 # Mantenemos la meta data
@@ -72,4 +73,4 @@ if __name__ == "__main__":
                 result.write("\t".join(aux))
 
             source.close()
-            print(id, "finished for", name)
+            print(" Finished!")
