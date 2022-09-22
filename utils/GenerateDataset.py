@@ -59,7 +59,7 @@ if __name__ == "__main__":
                 # Desde la header line, empezaremos a conservar solo los samples esperados
                 aux = line.split("\t")[:9 + size]
                 aux.append("\n")
-                result.write("\t".join(aux))
+                result.write("\t".join(aux) + "\n")
                 line = source.readline()
 
                 while(line):
