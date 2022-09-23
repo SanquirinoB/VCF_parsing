@@ -1,6 +1,7 @@
 from concurrent.futures import process
 import sys
 import os
+import re
 from VCFUtils import VCFUtils
 
 if __name__ == "__main__":
@@ -12,14 +13,14 @@ if __name__ == "__main__":
     # Generamos una referencia nueva en el folder de destino
     if (processType == "REF"):
         aux = source.split("/")[-1]
-        new_reference = os.path.join(destPath, aux)
+        new_reference = os.path.join(destPath, "ref.fa")
         refFile = open(source, 'r')
         print("Start", source , "->", new_reference)
         with open(new_reference, 'w') as newFile:
             line = refFile.readline()
             while(line):
-                line = line.replace("N", "A")
-                line = line.replace("n", "A")
+                if(line[0] != ">"):
+                    line = re.sub('[^ACGT\n]', 'A', line)
                 newFile.write(line)
                 line = refFile.readline()
 
@@ -57,9 +58,9 @@ if __name__ == "__main__":
                     if (len(line) == 2): break
                     line = line.split("\t")
                     # REF
-                    line[3] = line[3].replace("N", "A")
+                    line[3] = re.sub('[^ACGT]', 'A', line[3])
                     # ALT
-                    line[4] = line[4].replace("N", "A")
+                    line[4] = re.sub('[^ACGT]', 'A', line[4])
 
                     newVCF.write("\t".join(line))
 

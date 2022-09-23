@@ -16,10 +16,10 @@ class VCFUtils():
 
         return len(header)
 
-    def GenerateExpectedSizes(self, originalSize, n = 10):
+    def GenerateExpectedSizes(self, originalSize, n = 10, sampling = 10):
         # Genera un escalamiento al [0.1, 0.2, ..., 0.9, 1]
         newSizes = []
         for i in range(n):
-            newSizes.append([ i + 1, int(originalSize * ((i + 1) / 10))])
+            newSizes.append([ i + 1, int(originalSize * ((i + 1) / sampling))])
 
         return newSizes

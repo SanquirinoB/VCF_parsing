@@ -28,15 +28,18 @@ if __name__ == "__main__":
         # Esta linea es para generar el primer sampling sobre los VCF original
     # samples = 1
         # Despues usamos esta para escalar sobre el 10% original
-    samples = 9
-    newSizes = util.GenerateExpectedSizes(originalSize, samples)
+    # Cuantos quiero
+    samples = 4
+    # Divisor del factor de crecimiento
+    sampling = 5
+    newSizes = util.GenerateExpectedSizes(originalSize, samples, sampling)
     print(newSizes)
 
     # Creo la carpeta donde almacenare los archivos generados
-    # for i in range(samples):
-    #     folder = os.path.join(destPath, "s" + str((i+1) * 10))
-    #     if not os.path.isdir(folder):
-    #         os.mkdir(folder)
+    for i in range(samples):
+        folder = os.path.join(destPath, "s" + str((i+1) * sampling))
+        if not os.path.isdir(folder):
+            os.mkdir(folder)
 
     # Por cada archivo
     for i in range(len(originalNames)):
@@ -58,7 +61,6 @@ if __name__ == "__main__":
 
                 # Desde la header line, empezaremos a conservar solo los samples esperados
                 aux = line.split("\t")[:9 + size]
-                aux.append("\n")
                 result.write("\t".join(aux) + "\n")
                 line = source.readline()
 

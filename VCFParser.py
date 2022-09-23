@@ -96,8 +96,9 @@ class VCFParser():
         self.Length_Reference, self.meta_ReferenceValues = self.reference_processor.GetReferenceData()
 
         # This last line its supposed to be the header line
-        tmp_ID_samples = line.split("\t")[9:]
+        tmp_ID_samples = line.split("\t")[9:-1]
         self.n_samples = len(tmp_ID_samples)
+        print(self.n_samples)
         self.ID_samples = {}
         for i in range(self.n_samples):
             self.ID_samples[i] = tmp_ID_samples[i]
@@ -172,8 +173,7 @@ class VCFParser():
             self.curr_AleleList = raw_AleleList.split("|")
 
         self.curr_AleleList = [
-            int(x) if x != "." else self.MISS_AleleAlt for x in self.curr_AleleList]
-
+            int(x) if x.isnumeric() else self.MISS_AleleAlt for x in self.curr_AleleList]
         # if self.isDebugMode:
         #     print("CurrAleleList is:", self.curr_AleleList)
 
@@ -327,6 +327,10 @@ class VCFParser():
                 elif re.fullmatch(self.p_cnv_record, alt):
                     self.GenerateDuplicationPhraseCache()
 
+                else:
+                    self.n_droppedRecords += 1
+                    self.is_valid_record = False
+
             else:
                 if self.isDebugMode:
                     print("(!) Edit no canonico descartado.")
@@ -366,8 +370,6 @@ class VCFParser():
             self.ProcessVariants()
 
             if self.is_valid_record:
-                if self.n_print > 0:
-                    print("Variante:\n", self.phrase_Cache)
                 # Over each sample
                 for i in range(self.n_samples):
                     self.phrase_INDV = i
