@@ -96,7 +96,7 @@ class VCFParser():
         self.Length_Reference, self.meta_ReferenceValues = self.reference_processor.GetReferenceData()
 
         # This last line its supposed to be the header line
-        tmp_ID_samples = line.split("\t")[9:-1]
+        tmp_ID_samples = line.split("\t")[9:]
         self.n_samples = len(tmp_ID_samples)
         print(self.n_samples)
         self.ID_samples = {}
@@ -351,6 +351,9 @@ class VCFParser():
 
         while raw_record:
             record = raw_record[:-1].split('\t')
+
+            # Fix temporal por samples
+            if(len(record) < 10): break
 
             self.CleanUpData()
 
