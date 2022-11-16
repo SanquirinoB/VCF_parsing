@@ -98,7 +98,7 @@ class VCFParser():
         # This last line its supposed to be the header line
         tmp_ID_samples = line.split("\t")[9:]
         self.n_samples = len(tmp_ID_samples)
-        print(self.n_samples)
+        # print(self.n_samples)
         self.ID_samples = {}
         for i in range(self.n_samples):
             self.ID_samples[i] = tmp_ID_samples[i]
